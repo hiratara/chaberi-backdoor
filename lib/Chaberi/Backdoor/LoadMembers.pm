@@ -22,32 +22,6 @@ has page => (
 	required => 1,
 );
 
-# 		host     => $parsed->{host},
-# 		port     => $parsed->{port},
-# 		room_ids => [ map { $_->{id} } @{ $parsed->{rooms} } ],
-
-# has host => (
-# 	isa      => 'Str',
-# 	is       => 'ro',
-# 	required => 1,
-# );
-
-# has port => (
-# 	isa      => 'Int',
-# 	is       => 'ro',
-# 	required => 1,
-# );
-
-# has room_ids => (
-# 	metaclass  => 'Collection::List',
-# 	isa        => 'ArrayRef[Int]',
-# 	is         => 'ro',
-# 	required   => 1,
-# 	provides => {
-# 		elements => 'all_room_ids',
-# 	},
-# );
-
 has 'lobby' => (
 	is => 'rw',
 );
@@ -57,7 +31,8 @@ sub host { shift->page->{host} }
 sub port { shift->page->{port} }
 sub room_ids { [ map { $_->{id} } @{ shift->page->{rooms} } ] }
 
-# events
+
+# events from client ====================================
 sub START {}
 
 event 'exec' => sub {
@@ -70,6 +45,8 @@ event 'exec' => sub {
 	$lobby->yield( 'ready' );
 };
 
+
+# events from POE::Component::Chaberi::Lobby ============
 event 'go' => sub {
 	my ($self, $lobby) = @_[OBJECT, ARG0 .. $#_];
 	$self->lobby( $lobby );
@@ -78,6 +55,7 @@ event 'go' => sub {
 			$self->next_event('recieve_members'), $self->room_ids,
 	);
 };
+
 
 event 'recieve_members' => sub {
 	my ($self, $ref_results) = @_[OBJECT, ARG0 .. $#_];
@@ -93,9 +71,11 @@ event 'recieve_members' => sub {
 	$self->lobby->yield( 'exit' );
 };
 
+
 event 'bye' => sub {
 	warn 'bye';
 };
+
 
 no  MooseX::POE;
 1;
