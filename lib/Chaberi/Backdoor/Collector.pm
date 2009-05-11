@@ -1,9 +1,9 @@
 package Chaberi::Backdoor::Collector;
 use MooseX::POE;
+use Chaberi::Backdoor::SearchPages;
 
 with 'POE::Component::Chaberi::Role::NextEvent', 
      'POE::Component::Chaberi::Role::RetainSession';
-
 
 has cont => (
 	isa      => 'ArrayRef',
@@ -11,10 +11,10 @@ has cont => (
 	required => 1,
 );
 
-has urls => (
-	isa      => 'ArrayRef',
-	is       => 'ro',
-	required => 1,
+has _urls => (
+	isa     => 'ArrayRef',
+	is      => 'ro',
+	default => sub { [] },
 );
 
 has _done => (
@@ -27,7 +27,27 @@ has _done => (
 sub START{
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
 	$self->retain_session;
+
+	# set pages to search.
+	for my $ch (0 .. 2) {
+		for my $p (1 .. 5) {
+			push @{ $self->_urls }, "http://ch$ch.chaberi.com/$p";
+		}
+	}
 }
+
+
+event exec => sub {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+
+	for (@{ $self->_urls }){
+		my $www = Chaberi::Backdoor::SearchPages->new(
+			cont => $self->next_event('finished'),
+			url  => $_,
+		);
+		$www->yield( 'exec' );
+	}
+};
 
 
 event finished => sub {
@@ -41,7 +61,7 @@ event finished => sub {
 
 	$self->_done->{ $page->{url} } = 1;
 
-	if( keys %{ $self->_done } >= @{ $self->urls } ){
+	if( keys %{ $self->_done } >= @{ $self->_urls } ){
 		# exit
 		$self->release_session;
 	}

@@ -12,33 +12,27 @@ has cont => (
 	required => 1,
 );
 
-has collector => (
-	isa => 'Maybe[Chaberi::Backdoor::Collector]',
-	is  => 'rw',
+has url => (
+	isa      => 'Str',
+	is       => 'ro',
+	requires => 1,
 );
 
 
 sub START {
-	my $self = shift;
-	my @urls;
-	for my $ch (0 .. 2) {
-		for my $p (1 .. 5) {
-			my $www = POE::Component::Chaberi::Lobby::WWW->new(
-				cont => $self->next_event('recieve_parsed'),
-				url  => "http://ch$ch.chaberi.com/$p",
-			);
-			$www->yield( 'exec' );
-			push @urls, $www->url;
-		}
-	}
-
-	$self->collector(
-		Chaberi::Backdoor::Collector->new(
-			cont => $self->cont,
-			urls => \@urls,
-		)
-	);
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
 }
+
+
+event exec => sub {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+	my $www = POE::Component::Chaberi::Lobby::WWW->new(
+		cont => $self->next_event('recieve_parsed'),
+		url  => $self->url,
+	);
+	$www->yield( 'exec' );
+};
+
 
 event 'recieve_parsed' => sub {
 	my ($self, $parsed, $url) = @_[OBJECT, ARG0 .. $#_];
@@ -47,10 +41,11 @@ event 'recieve_parsed' => sub {
 	$parsed->{url} = $url;
 
 	my $bk = Chaberi::Backdoor::LoadMembers->new(
-		cont     => $self->collector->next_event('finished'),
+		cont     => $self->cont,
 		page     => $parsed,
 	);
 	$bk->yield( 'exec' );
+
 	print "$parsed->{host},$parsed->{port},$url\n";
 };
 
@@ -59,7 +54,7 @@ no  MooseX::POE;
 
 =head1 NAME
 
-Chaberi::Backdoor::SearchPages - search rooms in all pages.
+Chaberi::Backdoor::SearchPages - search rooms in a page.
 
 =head1 DESCRIPTION
 

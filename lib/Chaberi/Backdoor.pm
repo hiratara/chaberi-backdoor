@@ -6,9 +6,10 @@ with 'POE::Component::Chaberi::Role::NextEvent';
 
 sub START {
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	Chaberi::Backdoor::SearchPages->new(
+	my $collector = Chaberi::Backdoor::Collector->new(
 		cont => $self->next_event('finished'),
 	);
+	$collector->yield('exec');
 }
 
 event finished => sub {
@@ -29,9 +30,10 @@ Chaberi::Backdoor - backdoor of chaberi
 
 get chaberi data and make a html.
 
-Backdoor -> SearchPages -> LoadMembers -> Statistics +
-     |          |                                    |
-     +----- Collector <------------------------------+
+Backdoor -> Collector -> SearchPages -> LoadMembers -> Statistics +
+                ^                                                 |
+                |                                                 |
+                +----------<------------<-------------<-----------+
 
 SearchPages make page data(hashref), and Loadmembers and Statistics marge
 information into it.
