@@ -92,7 +92,7 @@ no  MooseX::POE;
 
 =head1 NAME
 
-Chaberi::Backdoor::SearchPages - load members in a page.
+Chaberi::Backdoor::LoadMembers - load members in a page.
 
 =head1 DESCRIPTION
 
