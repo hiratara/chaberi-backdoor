@@ -88,3 +88,16 @@ event 'bye' => sub {
 
 no  MooseX::POE;
 1;
+
+
+=head1 NAME
+
+Chaberi::Backdoor::SearchPages - load members in a page.
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+hiratara E<lt>hira.tara@gmail.comE<gt>
+
+=cut

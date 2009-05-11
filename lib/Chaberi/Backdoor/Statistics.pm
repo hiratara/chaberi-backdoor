@@ -25,3 +25,16 @@ event exec => sub {
 
 no  MooseX::POE;
 1;
+
+
+=head1 NAME
+
+Chaberi::Backdoor::Statistics - culculation with DB.
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+hiratara E<lt>hira.tara@gmail.comE<gt>
+
+=cut

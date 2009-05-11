@@ -49,3 +49,17 @@ event finished => sub {
 };
 
 no  MooseX::POE;
+
+__END__
+
+=head1 NAME
+
+Chaberi::Backdoor::Collector - collect all page's results
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+hiratara E<lt>hira.tara@gmail.comE<gt>
+
+=cut

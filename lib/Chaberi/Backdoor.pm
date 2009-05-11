@@ -18,3 +18,28 @@ event finished => sub {
 
 no  MooseX::POE;
 
+__END__
+
+
+=head1 NAME
+
+Chaberi::Backdoor - backdoor of chaberi
+
+=head1 DESCRIPTION
+
+get chaberi data and make a html.
+
+Backdoor -> SearchPages -> LoadMembers -> Statistics +
+     |          |                                    |
+     +----- Collector <------------------------------+
+
+SearchPages make page data(hashref), and Loadmembers and Statistics marge
+information into it.
+
+Collector catches the all page data, and write it down in html.
+
+=head1 AUTHOR
+
+hiratara E<lt>hira.tara@gmail.comE<gt>
+
+=cut

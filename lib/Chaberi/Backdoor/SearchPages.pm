@@ -56,3 +56,15 @@ event 'recieve_parsed' => sub {
 
 no  MooseX::POE;
 1;
+
+=head1 NAME
+
+Chaberi::Backdoor::SearchPages - search rooms in all pages.
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+hiratara E<lt>hira.tara@gmail.comE<gt>
+
+=cut
