@@ -1,17 +1,12 @@
 package Chaberi::Backdoor::LoadMembers;
 use MooseX::POE;
 use POE::Component::Chaberi::Lobby;
+use Chaberi::Backdoor::Statistics;
 
 with 'POE::Component::Chaberi::Role::NextEvent';
 
 has cont => (
 	isa      => 'ArrayRef',
-	is       => 'ro',
-	required => 1,
-);
-
-has url => (
-	isa      => 'Str',
 	is       => 'ro',
 	required => 1,
 );
@@ -30,6 +25,19 @@ has 'lobby' => (
 sub host { shift->page->{host} }
 sub port { shift->page->{port} }
 sub room_ids { [ map { $_->{id} } @{ shift->page->{rooms} } ] }
+
+
+# merge result into page data (i.e. change page field destructively.)
+sub _merge_result {
+	my $self = shift;
+	my ( $ref_results ) = @_;
+
+	my %result = map { $_->{room_id} => $_->{room_status} } @$ref_results;
+
+	for ( @{ $self->page->{rooms} } ){
+		$_->{status} = $result{ $_->{id} } or die;
+	}
+}
 
 
 # events from client ====================================
@@ -60,14 +68,15 @@ event 'go' => sub {
 event 'recieve_members' => sub {
 	my ($self, $ref_results) = @_[OBJECT, ARG0 .. $#_];
 
-	$POE::Kernel::poe_kernel->post(
-		@{ $self->cont }, {
-			url       => $self->url,
-			page      => $self->page,
-			room_list => $ref_results,
-		},
-	);
+	$self->_merge_result( $ref_results );
 
+	my $statistics = Chaberi::Backdoor::Statistics->new(
+		cont => $self->cont,
+		page => $self->page,
+	);
+	$statistics->yield('exec');
+
+	# close lobby actor
 	$self->lobby->yield( 'exit' );
 };
 

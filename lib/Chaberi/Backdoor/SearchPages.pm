@@ -42,9 +42,12 @@ sub START {
 
 event 'recieve_parsed' => sub {
 	my ($self, $parsed, $url) = @_[OBJECT, ARG0 .. $#_];
+
+	# add url as key
+	$parsed->{url} = $url;
+
 	my $bk = Chaberi::Backdoor::LoadMembers->new(
 		cont     => $self->collector->next_event('finished'),
-		url      => $url,
 		page     => $parsed,
 	);
 	$bk->yield( 'exec' );

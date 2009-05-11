@@ -31,15 +31,15 @@ sub START{
 
 
 event finished => sub {
-	my ($self, $ref_results) = @_[OBJECT, ARG0 .. $#_];
+	my ($self, $page) = @_[OBJECT, ARG0 .. $#_];
 
-	for (@{ $ref_results->{room_list} }) {
-		my $room_id  = $_->{room_id};
-		my $room_ref = $_->{room_status};
+	for (@{ $page->{rooms} }) {
+		my $room_id  = $_->{id};
+		my $room_ref = $_->{status};
 		print "$room_id - " . @{ $room_ref->{members} } . "\n";
 	}
 
-	$self->_done->{ $ref_results->{url} } = 1;
+	$self->_done->{ $page->{url} } = 1;
 
 	if( keys %{ $self->_done } >= @{ $self->urls } ){
 		# exit
