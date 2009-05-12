@@ -1,0 +1,17 @@
+[% FOR page = info.pages %]
+<h1><a href="[% page.url %]">LINK</a></h1>
+<table>
+[% FOR room = page.rooms %]
+<tr>
+<td>
+<a href="[% room.url %]">[% room.name %]</a>
+</td>
+<td>
+[% FOR member = room.members %]
+   [% member.name %] ([% member.range.1 - member.range.0%] sec)[% IF ! loop.last %]　[% END %]
+[% END %]
+</td>
+</tr>
+[% END %]
+</table>
+[% END %]

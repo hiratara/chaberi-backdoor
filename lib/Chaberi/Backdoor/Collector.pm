@@ -1,5 +1,6 @@
 package Chaberi::Backdoor::Collector;
 use MooseX::POE;
+use POE;
 use Chaberi::Backdoor::SearchPages;
 
 with 'POE::Component::Chaberi::Role::NextEvent', 
@@ -85,16 +86,17 @@ event exec => sub {
 event finished => sub {
 	my ($self, $page) = @_[OBJECT, ARG0 .. $#_];
 
-	# FOR DEBUG
-	for (@{ $page->{rooms} }) {
-		print "$_->{name} - ", ($_->{ad} || ''), "(" . @{ $_->{members} } . ")\n";
-	}
-
-	$self->_done->{ $page->{url} } = 1;
+	# record ended pages
+	$self->_done->{ $page->{url} } = $page;
 
 	if( keys %{ $self->_done } >= @{ $self->_urls } ){
 		# exit
 		$self->release_session;
+		$poe_kernel->post(
+			@{ $self->cont } => { 
+				pages => [ map { $self->_done->{$_} } @{ $self->_urls } ], 
+			},
+		);
 	}
 
 };

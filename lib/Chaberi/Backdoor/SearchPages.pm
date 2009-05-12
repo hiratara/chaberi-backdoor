@@ -66,8 +66,9 @@ event 'recieve_parsed' => sub {
 	);
 	$bk->yield( 'exec' );
 
-	warn "$parsed->{host},$parsed->{port},$url\n";
+	# warn "$parsed->{host},$parsed->{port},$url\n";
 };
+
 
 no  MooseX::POE;
 1;

@@ -94,7 +94,7 @@ event 'recieve_members' => sub {
 
 
 event 'bye' => sub {
-	warn 'bye';
+	# warn 'bye';
 };
 
 

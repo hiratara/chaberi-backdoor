@@ -1,5 +1,6 @@
 package Chaberi::Backdoor;
 use MooseX::POE;
+use Template;
 use Chaberi::Backdoor::SearchPages;
 
 with 'POE::Component::Chaberi::Role::NextEvent';
@@ -13,8 +14,15 @@ sub START {
 }
 
 event finished => sub {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	warn "finished;";
+	my ($self, $info) = @_[OBJECT, ARG0 .. $#_];
+	my $tt = Template->new(
+		ENCODING => 'utf8', 
+	);
+	$tt->process('moto.tt', {info => $info}, \my $out) or die $tt->error;
+
+	open my $fh, '>:utf8', 'out.html' or die;
+	print $fh $out;
+	close $fh;
 };
 
 no  MooseX::POE;
