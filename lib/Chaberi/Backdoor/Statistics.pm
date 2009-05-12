@@ -77,24 +77,20 @@ sub _merge_statistics{
 	my $self = shift;
 
 	# load DB data
-	for my $room_info ( @{ $self->page->{rooms} }){
+	for my $ref_room ( @{ $self->page->{rooms} }){
 		my $room = $self->schema->resultset('Room')->find({
-			unique_key => $room_info->{link},
+			unique_key => $ref_room->{url},
 		});
 
 		next unless $room;
 
-		$room_info->{obj_room} = $room;
-
-		for my $member ( $room_info->{status}->all_members ){
+		for my $ref_member ( @{ $ref_room->{members} } ){
 			my $nick = $self->schema->resultset('Nick')->find_or_new(
-				name => $member->name,
+				name => $ref_member->{name},
 			)->insert();
 			my $range = $self->_calc_range($room, $nick);
 
-			# XXX $member is object so this code is too agly.
-			$member->{obj_nick}  = $nick;
-			$member->{obj_range} = $range;
+			$ref_member->{range} = [$range->epoch1, $range->epoch2];
 		}
 	}
 }

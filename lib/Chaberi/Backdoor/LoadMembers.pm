@@ -22,9 +22,9 @@ has 'lobby' => (
 );
 
 # Subroutines
-sub host { shift->page->{host} }
-sub port { shift->page->{port} }
-sub room_ids { [ map { $_->{id} } @{ shift->page->{rooms} } ] }
+sub host { shift->page->{_host} }
+sub port { shift->page->{_port} }
+sub room_ids { [ map { $_->{_id} } @{ shift->page->{rooms} } ] }
 
 
 # merge result into page data (i.e. change page field destructively.)
@@ -34,9 +34,21 @@ sub _merge_result {
 
 	my %result = map { $_->{room_id} => $_->{room_status} } @$ref_results;
 
-	for ( @{ $self->page->{rooms} } ){
-		$_->{status} = $result{ $_->{id} } or die;
+	for my $ref_room ( @{ $self->page->{rooms} } ){
+		my $status = $result{ $ref_room->{_id} } or die;
+		my @members = map { {
+			name  => $_->name,
+			range => undef, # we've not known it yet.
+			# Do we need neither $_->status nor $_->is_owner ??
+		} } $status->all_members;
+		$ref_room->{ad}      = $status->advertising;
+		$ref_room->{members} = \@members;
 	}
+
+	# cleaning.
+	delete $_->{_id} for @{ $self->page->{rooms} };
+	delete $self->page->{_host};
+	delete $self->page->{_port};
 }
 
 

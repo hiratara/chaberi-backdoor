@@ -18,11 +18,32 @@ has url => (
 	requires => 1,
 );
 
+# subroutines==================================================================
+sub _create_page{
+	my $self = shift;
+	my ( $parsed ) = @_;
 
+	my @rooms = map { {
+		name => $_->{name}, 
+		url  => $_->{link}, 
+		ad      => undef, # we've not known yet.
+		members => undef, # we've not known yet.
+		_id  => $_->{id},
+	} } @{ $parsed->{rooms} };
+
+	return {
+		name  => undef,  # we don't know.
+		url   => $self->url,
+		rooms => \@rooms,
+		_host => $parsed->{host},
+		_port => $parsed->{port},
+	};
+}
+
+# event defs ==================================================================
 sub START {
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
 }
-
 
 event exec => sub {
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
@@ -37,16 +58,15 @@ event exec => sub {
 event 'recieve_parsed' => sub {
 	my ($self, $parsed, $url) = @_[OBJECT, ARG0 .. $#_];
 
-	# add url as key
-	$parsed->{url} = $url;
+	$self->url eq $url or die 'got unknown URL:' . $url;
 
 	my $bk = Chaberi::Backdoor::LoadMembers->new(
-		cont     => $self->cont,
-		page     => $parsed,
+		cont => $self->cont,
+		page => $self->_create_page($parsed),
 	);
 	$bk->yield( 'exec' );
 
-	print "$parsed->{host},$parsed->{port},$url\n";
+	warn "$parsed->{host},$parsed->{port},$url\n";
 };
 
 no  MooseX::POE;

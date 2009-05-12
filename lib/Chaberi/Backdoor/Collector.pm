@@ -50,13 +50,44 @@ event exec => sub {
 };
 
 
+=over
+
+{
+	pages => [
+		{  # $page
+			_host => 'socket host',  # temporary
+			_port => 'socket port',  # temporary
+			name  => 'ページ名',
+			url   => 'URL',
+			rooms => [
+				{ # room
+					_id  => 'ID in chaberi',  # temporary
+					url  => 'URL',
+					name => '部屋名',
+					ad   => '呼び込み'
+					members => [
+						{ # member
+							name  => 'ニック',
+							range => [epoch1, epoch2],
+						},
+						...
+					]
+				},
+				...
+			],
+		},
+		...
+	],
+}
+
+=cut
+
 event finished => sub {
 	my ($self, $page) = @_[OBJECT, ARG0 .. $#_];
 
+	# FOR DEBUG
 	for (@{ $page->{rooms} }) {
-		my $room_id  = $_->{id};
-		my $room_ref = $_->{status};
-		print "$room_id - " . @{ $room_ref->{members} } . "\n";
+		print "$_->{name} - ", ($_->{ad} || ''), "(" . @{ $_->{members} } . ")\n";
 	}
 
 	$self->_done->{ $page->{url} } = 1;
