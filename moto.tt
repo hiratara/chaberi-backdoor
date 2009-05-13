@@ -48,15 +48,15 @@ td.member-names{
 <table class="display-table">
 [% FOR page = info.pages %]
 <tr>
-<td colspan="3"><a href="[% page.url %]">LINK</a></td>
+<td colspan="3"><a href="[% page.url | html %]">[% page.name | html %]</a></td>
 </tr>
 [% FOR room = page.rooms %]
 <tr>
 <td class="room-name">
-<a href="[% room.url %]">[% room.name %]</a>
+<a href="[% room.url | html %]">[% room.name %]</a>
 </td>
 <td class="room-ad">
-[% room.ad %]
+[% room.ad | html %]
 </td>
 <td class="member-names">
 [%~ FOR member = room.members ~%]

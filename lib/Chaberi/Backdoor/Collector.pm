@@ -1,4 +1,5 @@
 package Chaberi::Backdoor::Collector;
+use utf8;
 use MooseX::POE;
 use POE;
 use Chaberi::Backdoor::SearchPages;
@@ -12,10 +13,21 @@ has cont => (
 	required => 1,
 );
 
-has _urls => (
-	isa     => 'ArrayRef',
-	is      => 'ro',
-	default => sub { [] },
+has urls => (
+	isa => 'ArrayRef[ArrayRef]',
+	is  => 'ro',
+	default => sub { [
+		['http://ch1.chaberi.com/' , 'ブルー/トップ'],
+		['http://ch1.chaberi.com/2', 'ブルー/2'],
+		['http://ch1.chaberi.com/3', 'ブルー/3'],
+		['http://ch1.chaberi.com/4', 'ブルー/4'],
+		['http://ch1.chaberi.com/5', 'ブルー/5'],
+		['http://ch2.chaberi.com/' , 'オレンジ/トップ'],
+		['http://ch2.chaberi.com/2', 'オレンジ/2'],
+		['http://ch2.chaberi.com/3', 'オレンジ/3'],
+		['http://ch2.chaberi.com/4', 'オレンジ/4'],
+		['http://ch2.chaberi.com/5', 'オレンジ/5'],
+	] },
 );
 
 has _done => (
@@ -25,31 +37,8 @@ has _done => (
 );
 
 
-sub START{
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	$self->retain_session;
 
-	# set pages to search.
-	for my $ch (0 .. 2) {
-		for my $p (1 .. 5) {
-			push @{ $self->_urls }, "http://ch$ch.chaberi.com/$p";
-		}
-	}
-}
-
-
-event exec => sub {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-
-	for (@{ $self->_urls }){
-		my $www = Chaberi::Backdoor::SearchPages->new(
-			cont => $self->next_event('finished'),
-			url  => $_,
-		);
-		$www->yield( 'exec' );
-	}
-};
-
+# subroutin  ===============================
 
 =over
 
@@ -83,18 +72,54 @@ event exec => sub {
 
 =cut
 
+# destructively method
+sub _merge_all_pages{
+	my $self = shift;
+	my @pages;
+	for my $ref_url (@{ $self->urls }){
+		my ($url, $name) = @$ref_url;
+
+		my $page = $self->_done->{$url};
+		$page->{name} = $name;  # add page name destructively
+
+		push @pages, $page;
+	}
+
+	return \@pages;
+}
+
+# POE events ===============================
+sub START{
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+	$self->retain_session;
+}
+
+
+event exec => sub {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+
+	for (@{ $self->urls }){
+		my $www = Chaberi::Backdoor::SearchPages->new(
+			cont => $self->next_event('finished'),
+			url  => $_->[0],
+		);
+		$www->yield( 'exec' );
+	}
+};
+
+
 event finished => sub {
 	my ($self, $page) = @_[OBJECT, ARG0 .. $#_];
 
 	# record ended pages
 	$self->_done->{ $page->{url} } = $page;
 
-	if( keys %{ $self->_done } >= @{ $self->_urls } ){
+	if( keys %{ $self->_done } >= @{ $self->urls } ){
 		# exit
 		$self->release_session;
 		$poe_kernel->post(
 			@{ $self->cont } => { 
-				pages => [ map { $self->_done->{$_} } @{ $self->_urls } ], 
+				pages => $self->_merge_all_pages, 
 			},
 		);
 	}
