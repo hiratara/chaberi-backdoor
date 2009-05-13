@@ -5,6 +5,19 @@ use Chaberi::Backdoor::SearchPages;
 
 with 'POE::Component::Chaberi::Role::NextEvent';
 
+has timeout_sec => (
+	isa => 'Int',
+	is  => 'ro',
+	default => 60 * 3,
+);
+
+has _timeout_alarm => (
+	isa => 'Int',
+	is  => 'rw',
+);
+
+
+# subroutine 
 sub _level {
 	my $member = shift;
 	my ($epoch1, $epoch2) = @{ $member->{range} || [0, 0] };
@@ -22,16 +35,27 @@ sub _level {
 	}
 }
 
+
+# events =======================
 sub START {
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
 	my $collector = Chaberi::Backdoor::Collector->new(
 		cont => $self->next_event('finished'),
 	);
 	$collector->yield('exec');
+
+	# set timeout
+	$self->_timeout_alarm( 
+		$poe_kernel->delay_set( timeout => $self->timeout_sec )
+	);
 }
 
 event finished => sub {
 	my ($self, $info) = @_[OBJECT, ARG0 .. $#_];
+
+	# reset timeout timer
+	$poe_kernel->alarm_remove( $self->_timeout_alarm );
+
 	my $tt = Template->new(
 		ENCODING => 'utf8', 
 	);
@@ -45,6 +69,12 @@ event finished => sub {
 	print $fh $out;
 	close $fh;
 };
+
+
+event timeout => sub {
+	die "timeouted\n";
+};
+
 
 no  MooseX::POE;
 
