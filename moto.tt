@@ -1,17 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>チャベリ 裏口２</title>
+<style>
+body {
+  font-size: 5px;
+  color: red;
+}
+td.room-name{
+  font-size: 10px;
+  white-space: nowrap;
+}
+td.room-ad{
+  font-size: 10px;
+  white-space: nowrap;
+}
+td.member-names{
+  font-size: 10px;
+}
+.display-table {
+  border-collapse: collapse;
+  border: 1px #1C79C6 solid;
+}
+.display-table td{
+  border: 1px #1C79C6 solid;
+}
+</style>
+</head>
+
+<body>
+
+<table class="display-table">
 [% FOR page = info.pages %]
-<h1><a href="[% page.url %]">LINK</a></h1>
-<table>
+<tr>
+<td colspan="3"><a href="[% page.url %]">LINK</a></td>
+</tr>
 [% FOR room = page.rooms %]
 <tr>
-<td>
+<td class="room-name">
 <a href="[% room.url %]">[% room.name %]</a>
 </td>
-<td>
-[% FOR member = room.members %]
-   [% member.name %] ([% member.range.1 - member.range.0%] sec)[% IF ! loop.last %]　[% END %]
-[% END %]
+<td class="room-ad">
+[% room.ad %]
+</td>
+<td class="member-names">
+[%~ FOR member = room.members ~%]
+   <span alt="[% member.range.1 - member.range.0%] sec">[%~ member.name %]</span>[% IF ! loop.last %]　[% END ~%]
+[%~ END ~%]
 </td>
 </tr>
 [% END %]
-</table>
 [% END %]
+</table>
+
+</body>
+</html>
