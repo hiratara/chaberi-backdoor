@@ -5,19 +5,23 @@
 <title>チャベリ 裏口２</title>
 <style>
 body {
-  font-size: 5px;
+  font-size: 10px;
+}
+#copyright{
+  align: center;
+  color: #999;
+}
+td {
+  font-size: 10px;
 }
 td.room-name{
-  font-size: 10px;
   white-space: nowrap;
 }
 td.room-ad{
-  font-size: 10px;
   white-space: nowrap;
 }
-td.member-names{
-  font-size: 10px;
-}
+td.member-names{}
+
 .member-name-lv1{
   color: #509;
 }
@@ -67,6 +71,13 @@ td.member-names{
 [% END %]
 [% END %]
 </table>
+
+<p>
+完了時刻: [% finished %]<br>
+処理時間: [% exec_time %]秒<br>
+</p>
+
+<div id="copyright" align="right">&copy; 2009- hiratara</div>
 
 </body>
 </html>

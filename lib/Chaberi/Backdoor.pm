@@ -11,6 +11,12 @@ has timeout_sec => (
 	default => 60 * 3,
 );
 
+has _start_epoch => (
+	isa     => 'Int',
+	is      => 'ro',
+	default => sub { scalar time },
+);
+
 has _timeout_alarm => (
 	isa => 'Int',
 	is  => 'rw',
@@ -60,9 +66,10 @@ event finished => sub {
 		ENCODING => 'utf8', 
 	);
 	$tt->process('moto.tt', {
-		info    => $info,
-		FUNC_LV => \&_level,
-
+		info      => $info,
+		FUNC_LV   => \&_level,
+		finished  => scalar localtime,
+		exec_time => time - $self->_start_epoch,
 	}, \my $out) or die $tt->error;
 
 	open my $fh, '>:utf8', 'out.html' or die;
