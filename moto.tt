@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>チャベリ 裏口２</title>
+<title>チャベリ 裏口２ α版</title>
 <style>
 body {
   font-size: 10px;
@@ -48,6 +48,7 @@ td.member-names{}
 </head>
 
 <body>
+高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。
 
 <table class="display-table">
 [% FOR page = info.pages %]
