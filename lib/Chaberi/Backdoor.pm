@@ -5,6 +5,23 @@ use Chaberi::Backdoor::SearchPages;
 
 with 'POE::Component::Chaberi::Role::NextEvent';
 
+sub _level {
+	my $ref = shift;
+	my ($epoch1, $epoch2) = @{ $ref->{range} || [0, 0] };
+	my $len = ($epoch2 - $epoch1) / 60;
+	if ($len < 10) {
+		return 1;
+	} elsif ($len < 30) {
+		return 2;
+	} elsif ($len < 60) {
+		return 3;
+	} elsif ($len < 180) {
+		return 4;
+	} else {
+		return 5;
+	}
+}
+
 sub START {
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
 	my $collector = Chaberi::Backdoor::Collector->new(
@@ -18,7 +35,11 @@ event finished => sub {
 	my $tt = Template->new(
 		ENCODING => 'utf8', 
 	);
-	$tt->process('moto.tt', {info => $info}, \my $out) or die $tt->error;
+	$tt->process('moto.tt', {
+		info    => $info,
+		FUNC_LV => \&_level,
+
+	}, \my $out) or die $tt->error;
 
 	open my $fh, '>:utf8', 'out.html' or die;
 	print $fh $out;
