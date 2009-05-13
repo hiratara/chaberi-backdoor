@@ -6,8 +6,8 @@ use Chaberi::Backdoor::SearchPages;
 with 'POE::Component::Chaberi::Role::NextEvent';
 
 sub _level {
-	my $ref = shift;
-	my ($epoch1, $epoch2) = @{ $ref->{range} || [0, 0] };
+	my $member = shift;
+	my ($epoch1, $epoch2) = @{ $member->{range} || [0, 0] };
 	my $len = ($epoch2 - $epoch1) / 60;
 	if ($len < 10) {
 		return 1;
