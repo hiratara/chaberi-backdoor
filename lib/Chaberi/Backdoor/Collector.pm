@@ -27,6 +27,11 @@ has urls => (
 		['http://ch2.chaberi.com/3', 'オレンジ/3'],
 		['http://ch2.chaberi.com/4', 'オレンジ/4'],
 		['http://ch2.chaberi.com/5', 'オレンジ/5'],
+		['http://ch3.chaberi.com/' , 'グリーン/トップ'],
+		['http://ch3.chaberi.com/2', 'グリーン/2'],
+		['http://ch3.chaberi.com/3', 'グリーン/3'],
+		['http://ch3.chaberi.com/4', 'グリーン/4'],
+		['http://ch3.chaberi.com/5', 'グリーン/5'],
 	] },
 );
 
