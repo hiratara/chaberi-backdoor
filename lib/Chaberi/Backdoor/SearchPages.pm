@@ -60,6 +60,21 @@ event 'recieve_parsed' => sub {
 
 	$self->url eq $url or die 'got unknown URL:' . $url;
 
+	# XXX I should implement codes to recovery.
+	unless($parsed){
+		# Failure. Return to Collector immediately.
+		$POE::Kernel::poe_kernel->post(
+			@{ $self->cont }, {  # Send empty room data.
+				name  => undef,
+				url   => $self->url,
+				rooms => [],
+			},
+		);
+		return;
+	}
+
+
+	# Pass results to next task.
 	my $bk = Chaberi::Backdoor::LoadMembers->new(
 		cont => $self->cont,
 		page => $self->_create_page($parsed),
