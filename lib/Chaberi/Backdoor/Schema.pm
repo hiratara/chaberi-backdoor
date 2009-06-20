@@ -11,9 +11,9 @@ sub _get_current_dir{
 	return $ret;
 }
 
-*default_schema = ( sub {
+*default_schema = do {
 	my $_schema;
-	return sub {
+	sub {
 		my $class = shift;
 		$_schema = $class->connect(
 			sprintf(
@@ -23,6 +23,6 @@ sub _get_current_dir{
 		) unless $_schema;
 		return $_schema;
 	};
-} )->();
+};
 
 1;
