@@ -1,0 +1,15 @@
+This is the WEB service; http://hiratara.dyndns.org/chaberi/
+
+We're executing this batch at intervals of 4 minutes
+and are making a HTML for the last URL.
+
+
+*** CAUTION ***
+
+For security reasons, this repository DOESN'T contain core source of 
+POCO::Chaberi which is used to communicate with
+chaberi servers. 
+
+If you really need these source, e-mail to me.
+
+hiratara
