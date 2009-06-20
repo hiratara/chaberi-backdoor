@@ -52,7 +52,12 @@ td.member-names{}
 </head>
 
 <body>
-高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。
+<p>
+<a href="http://hiratara.dyndns.org/chaberi/">チャベリ 裏口</a>を高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。
+</p>
+<p>
+ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。
+</p>
 
 <table class="display-table">
 [% FOR page = info.pages %]
