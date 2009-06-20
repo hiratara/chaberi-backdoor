@@ -14,6 +14,9 @@ body {
 td {
   font-size: 10px;
 }
+td.page-name{
+  white-space: nowrap;
+}
 td.room-name{
   white-space: nowrap;
 }
@@ -52,11 +55,11 @@ td.member-names{}
 
 <table class="display-table">
 [% FOR page = info.pages %]
-<tr>
-<td colspan="3"><a href="[% page.url | html %]">[% page.name | html %]</a></td>
-</tr>
 [% FOR room = page.rooms %]
 <tr>
+<td class="page-name">
+<a href="[% page.url | html %]">[% page.name | html %]</a>
+</td>
 <td class="room-name">
 <a href="[% room.url | html %]">[% room.name %]</a>
 </td>
