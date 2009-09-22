@@ -1,9 +1,13 @@
 package main;
 use strict;
 use warnings;
-use POE;
+use AnyEvent::Impl::POE;
+use AnyEvent;
+# use Coro::AnyEvent;
 use Chaberi::Backdoor;
 
-Chaberi::Backdoor->new;
+my $cv = AE::cv;
+Chaberi::Backdoor->new( condvar => $cv );
 
-POE::Kernel->run;
+# into main loop
+$cv->recv;

@@ -11,6 +11,12 @@ has timeout_sec => (
 	default => 60 * 3,
 );
 
+has condvar => (
+	isa      => 'AnyEvent::CondVar',
+	is       => 'ro',
+	required => 1,
+);
+
 has _start_epoch => (
 	isa     => 'Int',
 	is      => 'ro',
@@ -75,6 +81,8 @@ event finished => sub {
 	open my $fh, '>:utf8', 'out.html' or die;
 	print $fh $out;
 	close $fh;
+
+	$self->condvar->send;
 };
 
 
