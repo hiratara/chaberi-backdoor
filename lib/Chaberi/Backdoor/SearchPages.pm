@@ -1,4 +1,6 @@
 package Chaberi::Backdoor::SearchPages;
+use strict;
+use warnings;
 
 # $url, k1 => v1, k2 => v2, ..., $cb
 sub search {
