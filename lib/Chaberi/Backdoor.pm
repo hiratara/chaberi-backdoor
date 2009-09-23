@@ -47,23 +47,9 @@ sub _level {
 	}
 }
 
-
-# events =======================
-sub START {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	my $collector = Chaberi::Backdoor::Collector->new(
-		cont => $self->next_event('finished'),
-	);
-	$collector->yield('exec');
-
-	# set timeout
-	$self->_timeout_alarm( 
-		$poe_kernel->delay_set( timeout => $self->timeout_sec )
-	);
-}
-
-event finished => sub {
-	my ($self, $info) = @_[OBJECT, ARG0 .. $#_];
+sub finished {
+	my $self = shift;
+	my ($info) = @_;
 
 	# reset timeout timer
 	$poe_kernel->alarm_remove( $self->_timeout_alarm );
@@ -85,6 +71,18 @@ event finished => sub {
 	$self->condvar->send;
 };
 
+# events =======================
+sub START {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+
+	Chaberi::Backdoor::Collector::collect
+		sub { $self->finished(@_); };
+
+	# set timeout
+	$self->_timeout_alarm( 
+		$poe_kernel->delay_set( timeout => $self->timeout_sec )
+	);
+}
 
 event timeout => sub {
 	die "timeouted\n";

@@ -1,4 +1,23 @@
 package Chaberi::Backdoor::Collector;
+use strict;
+use warnings;
+
+
+# k1 => v1, k2 => v2, ..., $cb
+sub collect {
+	my $cb = pop;
+	my %params = @_;
+
+	my $urls = delete $params{urls};
+
+	Chaberi::Backdoor::Collector::Task->new(
+		cb => $cb,
+		($urls ? (urls => $urls) : ()),
+	)->collect;
+}
+
+
+package Chaberi::Backdoor::Collector::Task;
 use utf8;
 use MooseX::POE;
 use POE;
@@ -7,8 +26,8 @@ use Chaberi::Backdoor::SearchPages;
 with 'POE::Component::Chaberi::Role::NextEvent', 
      'POE::Component::Chaberi::Role::RetainSession';
 
-has cont => (
-	isa      => 'ArrayRef',
+has cb => (
+	isa      => 'CodeRef',
 	is       => 'ro',
 	required => 1,
 );
@@ -93,14 +112,7 @@ sub _merge_all_pages{
 	return \@pages;
 }
 
-# POE events ===============================
-sub START{
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	$self->retain_session;
-}
-
-
-event exec => sub {
+sub collect{
 	my ($self) = @_[OBJECT, ARG0 .. $#_];
 
 	for (@{ $self->urls }){
@@ -110,8 +122,13 @@ event exec => sub {
 		);
 		$www->yield( 'exec' );
 	}
-};
+}
 
+# POE events ===============================
+sub START{
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+	$self->retain_session;
+}
 
 event finished => sub {
 	my ($self, $page) = @_[OBJECT, ARG0 .. $#_];
@@ -122,13 +139,13 @@ event finished => sub {
 	if( keys %{ $self->_done } >= @{ $self->urls } ){
 		# exit
 		$self->release_session;
-		$poe_kernel->post(
-			@{ $self->cont } => { 
+
+		$self->cb->(
+			{ 
 				pages => $self->_merge_all_pages, 
-			},
+			}
 		);
 	}
-
 };
 
 no  MooseX::POE;
