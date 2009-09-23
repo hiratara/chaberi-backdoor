@@ -1,4 +1,19 @@
 package Chaberi::Backdoor::SearchPages;
+
+# $url, k1 => v1, k2 => v2, ..., $cb
+sub search {
+	my $url = shift;
+	my $cb  = pop;
+	my %params = @_;
+
+	Chaberi::Backdoor::SearchPages::Task->new(
+		url => $url,
+		cb  => $cb,
+	)->search;
+}
+
+
+package Chaberi::Backdoor::SearchPages::Task;
 use MooseX::POE;
 use Chaberi::Lobby::WWW;
 use Chaberi::Backdoor::LoadMembers;
@@ -41,7 +56,7 @@ sub _create_page{
 }
 
 
-sub search_pages{
+sub search{
 	my $self = shift;
 
 	Chaberi::Lobby::WWW::parse_lobby
@@ -79,19 +94,6 @@ sub recieve_parsed {
 
 	# warn "$parsed->{host},$parsed->{port},$url\n";
 };
-
-
-# event defs ==================================================================
-sub START {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-}
-
-event exec => sub {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	$self->search_pages;
-};
-
-
 
 no  MooseX::POE;
 1;

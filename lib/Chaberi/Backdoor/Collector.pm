@@ -109,14 +109,12 @@ sub _merge_all_pages{
 }
 
 sub collect{
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
+	my $self = shift;
 
 	for (@{ $self->urls }){
-		my $www = Chaberi::Backdoor::SearchPages->new(
-			cb  => sub { $self->finished(@_) },
-			url => $_->[0],
-		);
-		$www->yield( 'exec' );
+		Chaberi::Backdoor::SearchPages::search
+			$_->[0], 
+			sub { $self->finished( @_ ); };
 	}
 }
 
