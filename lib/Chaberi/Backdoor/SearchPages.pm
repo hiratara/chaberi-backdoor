@@ -6,8 +6,8 @@ use Chaberi::Backdoor::Collector;
 
 with 'POE::Component::Chaberi::Role::NextEvent';
 
-has cont => (
-	isa      => 'ArrayRef',
+has cb => (
+	isa      => 'CodeRef',
 	is       => 'ro',
 	required => 1,
 );
@@ -60,8 +60,8 @@ sub recieve_parsed {
 	# XXX I should implement codes to recovery.
 	unless($parsed){
 		# Failure. Return to Collector immediately.
-		$POE::Kernel::poe_kernel->post(
-			@{ $self->cont }, {  # Send empty room data.
+		$self->cb->(
+			{  # Callback with empty room data.
 				name  => undef,
 				url   => $self->url,
 				rooms => [],
@@ -72,7 +72,7 @@ sub recieve_parsed {
 
 	# Pass results to next task.
 	my $bk = Chaberi::Backdoor::LoadMembers->new(
-		cont => $self->cont,
+		cb   => $self->cb,
 		page => $self->_create_page($parsed),
 	);
 	$bk->yield( 'exec' );

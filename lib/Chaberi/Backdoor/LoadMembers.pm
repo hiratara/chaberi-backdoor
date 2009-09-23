@@ -5,8 +5,8 @@ use Chaberi::Backdoor::Statistics;
 
 with 'POE::Component::Chaberi::Role::NextEvent';
 
-has cont => (
-	isa      => 'ArrayRef',
+has cb => (
+	isa      => 'CodeRef',
 	is       => 'ro',
 	required => 1,
 );
@@ -83,7 +83,7 @@ event 'recieve_members' => sub {
 	$self->_merge_result( $ref_results );
 
 	my $statistics = Chaberi::Backdoor::Statistics->new(
-		cont => $self->cont,
+		cb   => $self->cb  ,
 		page => $self->page,
 	);
 	$statistics->yield('exec');

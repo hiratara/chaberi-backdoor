@@ -5,8 +5,8 @@ use Chaberi::Backdoor::Schema;
 our $MARGINE = 20 * 60;  # 範囲が連続していると見なす幅
 
 
-has cont => (
-	isa      => 'ArrayRef',
+has cb => (
+	isa      => 'CodeRef',
 	is       => 'ro',
 	required => 1,
 );
@@ -105,9 +105,8 @@ event exec => sub {
 
 	$self->_merge_statistics;
 
-	$POE::Kernel::poe_kernel->post(
-		@{ $self->cont }, $self->page
-	);
+	# callback with page data
+	$self->cb->( $self->page );
 };
 
 no  MooseX::POE;

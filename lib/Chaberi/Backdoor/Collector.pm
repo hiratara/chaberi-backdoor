@@ -19,12 +19,8 @@ sub collect {
 
 package Chaberi::Backdoor::Collector::Task;
 use utf8;
-use MooseX::POE;
-use POE;
+use Moose;
 use Chaberi::Backdoor::SearchPages;
-
-with 'POE::Component::Chaberi::Role::NextEvent', 
-     'POE::Component::Chaberi::Role::RetainSession';
 
 has cb => (
 	isa      => 'CodeRef',
@@ -117,29 +113,22 @@ sub collect{
 
 	for (@{ $self->urls }){
 		my $www = Chaberi::Backdoor::SearchPages->new(
-			cont => $self->next_event('finished'),
-			url  => $_->[0],
+			cb  => sub { $self->finished(@_) },
+			url => $_->[0],
 		);
 		$www->yield( 'exec' );
 	}
 }
 
-# POE events ===============================
-sub START{
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	$self->retain_session;
-}
-
-event finished => sub {
-	my ($self, $page) = @_[OBJECT, ARG0 .. $#_];
+sub finished {
+	my $self = shift;
+	my ($page) = @_;
 
 	# record ended pages
 	$self->_done->{ $page->{url} } = $page;
 
 	if( keys %{ $self->_done } >= @{ $self->urls } ){
-		# exit
-		$self->release_session;
-
+		# callback with all page data
 		$self->cb->(
 			{ 
 				pages => $self->_merge_all_pages, 
@@ -148,7 +137,11 @@ event finished => sub {
 	}
 };
 
-no  MooseX::POE;
+
+__PACKAGE__->meta->make_immutable;
+no  Moose;
+
+1;
 
 __END__
 
