@@ -7,7 +7,9 @@ use AnyEvent;
 use Chaberi::Backdoor;
 
 my $cv = AE::cv;
-Chaberi::Backdoor->new( condvar => $cv );
+Chaberi::Backdoor::run sub {
+	$cv->send;
+};
 
 # into main loop
 $cv->recv;

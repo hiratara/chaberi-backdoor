@@ -1,9 +1,25 @@
 package Chaberi::Backdoor;
-use MooseX::POE;
+use strict;
+use warnings;
+
+# k1 => v1, k2 => v2, ..., $cb
+sub run{
+	my $cb = pop;
+	my %params = @_;
+
+	my $timeout = delete $params{timeout_sec};
+
+	Chaberi::Backdoor::Task->new(
+		cb => $cb,
+		($timeout ? (timeout_sec => $timeout) : ()),
+	)->run;
+}
+
+
+package Chaberi::Backdoor::Task;
+use Moose;
 use Template;
 use Chaberi::Backdoor::SearchPages;
-
-with 'POE::Component::Chaberi::Role::NextEvent';
 
 has timeout_sec => (
 	isa => 'Int',
@@ -11,8 +27,8 @@ has timeout_sec => (
 	default => 60 * 3,
 );
 
-has condvar => (
-	isa      => 'AnyEvent::CondVar',
+has cb => (
+	isa      => 'CodeRef',
 	is       => 'ro',
 	required => 1,
 );
@@ -23,8 +39,8 @@ has _start_epoch => (
 	default => sub { scalar time },
 );
 
-has _timeout_alarm => (
-	isa => 'Int',
+has _timeout_timer => (
+	isa => 'Maybe[Object]',
 	is  => 'rw',
 );
 
@@ -52,7 +68,7 @@ sub finished {
 	my ($info) = @_;
 
 	# reset timeout timer
-	$poe_kernel->alarm_remove( $self->_timeout_alarm );
+	$self->_timeout_timer( undef );
 
 	my $tt = Template->new(
 		ENCODING => 'utf8', 
@@ -68,28 +84,27 @@ sub finished {
 	print $fh $out;
 	close $fh;
 
-	$self->condvar->send;
+	# callback
+	$self->cb->();
 };
 
-# events =======================
-sub START {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
+sub run {
+	my $self = shift;
 
 	Chaberi::Backdoor::Collector::collect
 		sub { $self->finished(@_); };
 
 	# set timeout
-	$self->_timeout_alarm( 
-		$poe_kernel->delay_set( timeout => $self->timeout_sec )
+	$self->_timeout_timer( 
+		AE::timer $self->timeout_sec, 0, sub {
+			# XXX should not die with AnyEvent loop
+			die "timeouted\n";
+		}
 	);
 }
 
-event timeout => sub {
-	die "timeouted\n";
-};
-
-
-no  MooseX::POE;
+__PACKAGE__->meta->make_immutable;
+no  Moose;
 
 __END__
 
