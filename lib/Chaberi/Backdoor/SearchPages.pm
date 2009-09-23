@@ -1,6 +1,6 @@
 package Chaberi::Backdoor::SearchPages;
 use MooseX::POE;
-use POE::Component::Chaberi::Lobby::WWW;
+use Chaberi::Lobby::WWW;
 use Chaberi::Backdoor::LoadMembers;
 use Chaberi::Backdoor::Collector;
 
@@ -40,23 +40,20 @@ sub _create_page{
 	};
 }
 
-# event defs ==================================================================
-sub START {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
+
+sub search_pages{
+	my $self = shift;
+
+	Chaberi::Lobby::WWW::parse_lobby
+		$self->url,
+		sub { $self->recieve_parsed(@_) };
 }
 
-event exec => sub {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	my $www = POE::Component::Chaberi::Lobby::WWW->new(
-		cont => $self->next_event('recieve_parsed'),
-		url  => $self->url,
-	);
-	$www->yield( 'exec' );
-};
 
-
-event 'recieve_parsed' => sub {
-	my ($self, $parsed, $url) = @_[OBJECT, ARG0 .. $#_];
+# cb for Chaberi::Lobby::WWW::parse_lobby
+sub recieve_parsed {
+	my $self = shift;
+	my ($parsed, $url) = @_;
 
 	$self->url eq $url or die 'got unknown URL:' . $url;
 
@@ -73,7 +70,6 @@ event 'recieve_parsed' => sub {
 		return;
 	}
 
-
 	# Pass results to next task.
 	my $bk = Chaberi::Backdoor::LoadMembers->new(
 		cont => $self->cont,
@@ -83,6 +79,18 @@ event 'recieve_parsed' => sub {
 
 	# warn "$parsed->{host},$parsed->{port},$url\n";
 };
+
+
+# event defs ==================================================================
+sub START {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+}
+
+event exec => sub {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+	$self->search_pages;
+};
+
 
 
 no  MooseX::POE;
