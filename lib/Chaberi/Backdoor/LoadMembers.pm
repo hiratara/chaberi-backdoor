@@ -1,9 +1,27 @@
 package Chaberi::Backdoor::LoadMembers;
+use strict;
+use warnings;
+
+# $page, k1 => v1, k2 => v2, ..., $cb
+sub load {
+	my $page = shift;
+	my $cb   = pop;
+	my %params = @_;
+
+	Chaberi::Backdoor::LoadMembers::Task->new(
+		page => $page,
+		cb   => $cb,
+	)->load;
+}
+
+
+package Chaberi::Backdoor::LoadMembers::Task;
 use MooseX::POE;
 use POE::Component::Chaberi::Lobby;
 use Chaberi::Backdoor::Statistics;
 
-with 'POE::Component::Chaberi::Role::NextEvent';
+with 'POE::Component::Chaberi::Role::NextEvent',
+     'POE::Component::Chaberi::Role::RetainSession';
 
 has cb => (
 	isa      => 'CodeRef',
@@ -52,11 +70,8 @@ sub _merge_result {
 }
 
 
-# events from client ====================================
-sub START {}
-
-event 'exec' => sub {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
+sub load {
+	my $self = shift;
 	my $lobby = POE::Component::Chaberi::Lobby->new(
 		address => $self->host,
 		port    => $self->port,
@@ -64,6 +79,12 @@ event 'exec' => sub {
 	$lobby->register( $self->get_session_id );
 	$lobby->yield( 'ready' );
 };
+
+# events from client ====================================
+sub START {
+	my ($self) = @_[OBJECT, ARG0 .. $#_];
+	$self->retain_session;  # XXX POE is too bad
+}
 
 
 # events from POE::Component::Chaberi::Lobby ============
@@ -90,6 +111,9 @@ event 'recieve_members' => sub {
 
 	# close lobby actor
 	$self->lobby->yield( 'exit' );
+
+	# release me! (XXX POE is too bad)
+	$self->release_session;
 };
 
 

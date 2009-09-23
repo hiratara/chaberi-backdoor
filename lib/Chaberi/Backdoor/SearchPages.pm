@@ -14,12 +14,10 @@ sub search {
 
 
 package Chaberi::Backdoor::SearchPages::Task;
-use MooseX::POE;
+use Moose;
 use Chaberi::Lobby::WWW;
 use Chaberi::Backdoor::LoadMembers;
 use Chaberi::Backdoor::Collector;
-
-with 'POE::Component::Chaberi::Role::NextEvent';
 
 has cb => (
 	isa      => 'CodeRef',
@@ -86,16 +84,16 @@ sub recieve_parsed {
 	}
 
 	# Pass results to next task.
-	my $bk = Chaberi::Backdoor::LoadMembers->new(
-		cb   => $self->cb,
-		page => $self->_create_page($parsed),
-	);
-	$bk->yield( 'exec' );
+	Chaberi::Backdoor::LoadMembers::load
+		$self->_create_page($parsed),
+		$self->cb;
 
 	# warn "$parsed->{host},$parsed->{port},$url\n";
 };
 
-no  MooseX::POE;
+
+__PACKAGE__->meta->make_immutable;
+no  Moose;
 1;
 
 =head1 NAME
