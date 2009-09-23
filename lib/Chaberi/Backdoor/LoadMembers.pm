@@ -86,7 +86,6 @@ sub START {
 	$self->retain_session;  # XXX POE is too bad
 }
 
-
 # events from POE::Component::Chaberi::Lobby ============
 event 'go' => sub {
 	my ($self, $lobby) = @_[OBJECT, ARG0 .. $#_];
@@ -103,11 +102,10 @@ event 'recieve_members' => sub {
 
 	$self->_merge_result( $ref_results );
 
-	my $statistics = Chaberi::Backdoor::Statistics->new(
-		cb   => $self->cb  ,
-		page => $self->page,
-	);
-	$statistics->yield('exec');
+	Chaberi::Backdoor::Statistics::update
+		$self->page,
+		$self->cb
+		;
 
 	# close lobby actor
 	$self->lobby->yield( 'exit' );

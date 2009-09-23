@@ -1,5 +1,27 @@
 package Chaberi::Backdoor::Statistics;
-use MooseX::POE;
+use strict;
+use warnings;
+
+# XXX This may be a blocking function which accesses to SQLite.
+# $page, k1 => v1, k2 => v2, ..., $cb
+sub update {
+	my $page = shift;
+	my $cb   = pop;
+	my %params = @_;
+
+	my $schema = delete $params{schema};
+	my $now    = delete $params{now_epoch};
+
+	Chaberi::Backdoor::Statistics::Task->new(
+		page => $page,
+		cb   => $cb,
+		($schema ? (schema    => $schema) : ()),
+		($now    ? (now_epoch => $now   ) : ()),
+	)->update;
+}
+
+package Chaberi::Backdoor::Statistics::Task;
+use Moose;
 use Chaberi::Backdoor::Schema;
 
 our $MARGINE = 20 * 60;  # 範囲が連続していると見なす幅
@@ -95,13 +117,8 @@ sub _merge_statistics{
 	}
 }
 
-
-# events =====================================
-
-sub START {}
-
-event exec => sub {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
+sub update {
+	my $self = shift;
 
 	$self->_merge_statistics;
 
@@ -109,7 +126,8 @@ event exec => sub {
 	$self->cb->( $self->page );
 };
 
-no  MooseX::POE;
+__PACKAGE__->meta->make_immutable;
+no  Moose;
 1;
 
 
