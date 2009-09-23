@@ -20,6 +20,7 @@ sub collect {
 package Chaberi::Backdoor::Collector::Task;
 use utf8;
 use Moose;
+use AnyEvent;
 use Chaberi::Backdoor::SearchPages;
 
 has cb => (
@@ -94,12 +95,14 @@ has _done => (
 
 # destructively method
 sub _merge_all_pages{
-	my $self = shift;
+	my $self       = shift;
+	my ($ref_done) = @_;
+
 	my @pages;
 	for my $ref_url (@{ $self->urls }){
 		my ($url, $name) = @$ref_url;
 
-		my $page = $self->_done->{$url};
+		my $page = $ref_done->{$url};
 		$page->{name} = $name;  # add page name destructively
 
 		push @pages, $page;
@@ -111,29 +114,28 @@ sub _merge_all_pages{
 sub collect{
 	my $self = shift;
 
+	my $cv = AE::cv;
+	my %done;
+
 	for (@{ $self->urls }){
+		$cv->begin;
 		Chaberi::Backdoor::SearchPages::search
 			$_->[0], 
-			sub { $self->finished( @_ ); };
+			sub {
+				my ( $page ) = @_;
+				$done{ $page->{url} } = $page;
+				$cv->end;
+			};
 	}
-}
 
-sub finished {
-	my $self = shift;
-	my ($page) = @_;
-
-	# record ended pages
-	$self->_done->{ $page->{url} } = $page;
-
-	if( keys %{ $self->_done } >= @{ $self->urls } ){
-		# callback with all page data
+	$cv->cb(sub {
 		$self->cb->(
-			{ 
-				pages => $self->_merge_all_pages, 
+			{
+				pages => $self->_merge_all_pages( \%done ), 
 			}
 		);
-	}
-};
+	} );
+}
 
 
 __PACKAGE__->meta->make_immutable;
