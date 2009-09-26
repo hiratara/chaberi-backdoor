@@ -69,18 +69,17 @@ sub _merge_result {
 
 sub load {
 	my $self = shift;
-	my $lobby = Chaberi::AnyEvent::Lobby->new(
+	Chaberi::AnyEvent::Lobby::connect
 		address => $self->host,
 		port    => $self->port,
-		on_go   => sub { $self->go(@_);  },
-		on_bye  => sub { $self->bye(@_); },
-	);
+		sub { $self->on_connect(@_); },
+	;
 };
 
 
-sub go {
+sub on_connect {
 	my $self = shift;
-	my ($lobby) = @_;
+	my ( $lobby ) = @_;
 	$self->lobby( $lobby );
 	$self->lobby->get_members(
 		ref_room_ids => $self->room_ids,
@@ -102,13 +101,8 @@ sub recieve_members {
 		$self->cb
 		;
 
-	# close lobby actor
-	$self->lobby->exit;
-};
-
-
-sub bye {
-	# warn 'bye';
+	# close lobby
+	$self->lobby( undef );
 };
 
 
