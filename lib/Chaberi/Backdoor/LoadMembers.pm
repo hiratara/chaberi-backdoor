@@ -17,7 +17,7 @@ sub load {
 
 package Chaberi::Backdoor::LoadMembers::Task;
 use Moose;
-use POE::Component::Chaberi::Lobby;
+use Chaberi::AnyEvent::Lobby;
 use Chaberi::Backdoor::Statistics;
 
 has cb => (
@@ -69,7 +69,7 @@ sub _merge_result {
 
 sub load {
 	my $self = shift;
-	my $lobby = POE::Component::Chaberi::Lobby->new(
+	my $lobby = Chaberi::AnyEvent::Lobby->new(
 		address => $self->host,
 		port    => $self->port,
 		on_go   => sub { $self->go(@_);  },
