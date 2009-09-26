@@ -17,7 +17,7 @@ sub search {
 
 package Chaberi::Backdoor::SearchPages::Task;
 use Moose;
-use Chaberi::Lobby::WWW;
+use Chaberi::AnyEvent::Lobby::WWW;
 use Chaberi::Backdoor::LoadMembers;
 use Chaberi::Backdoor::Collector;
 
@@ -59,13 +59,13 @@ sub _create_page{
 sub search{
 	my $self = shift;
 
-	Chaberi::Lobby::WWW::parse_lobby
+	Chaberi::AnyEvent::Lobby::WWW::parse_lobby
 		$self->url,
 		sub { $self->recieve_parsed(@_) };
 }
 
 
-# cb for Chaberi::Lobby::WWW::parse_lobby
+# cb for Chaberi::AnyEvent::Lobby::WWW::parse_lobby
 sub recieve_parsed {
 	my $self = shift;
 	my ($parsed, $url) = @_;
