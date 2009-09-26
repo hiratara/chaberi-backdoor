@@ -75,9 +75,9 @@ sub load {
 	my $lobby = POE::Component::Chaberi::Lobby->new(
 		address => $self->host,
 		port    => $self->port,
+		on_go   => sub { $self->go(@_);  },
+		on_bye  => sub { $self->bye(@_); },
 	);
-	$lobby->register( $self->get_session_id );
-	$lobby->yield( 'ready' );
 };
 
 # events from client ====================================
@@ -87,18 +87,22 @@ sub START {
 }
 
 # events from POE::Component::Chaberi::Lobby ============
-event 'go' => sub {
-	my ($self, $lobby) = @_[OBJECT, ARG0 .. $#_];
+sub go {
+	my $self = shift;
+	my ($lobby) = @_;
 	$self->lobby( $lobby );
-	$self->lobby->yield(
-		'get_members' =>
-			$self->next_event('recieve_members'), $self->room_ids,
+	$self->lobby->get_members(
+		ref_room_ids => $self->room_ids,
+		cb           => sub {
+			$self->recieve_members(@_);
+		},
 	);
 };
 
 
-event 'recieve_members' => sub {
-	my ($self, $ref_results) = @_[OBJECT, ARG0 .. $#_];
+sub recieve_members {
+	my $self = shift;
+	my ( $ref_results ) = @_;
 
 	$self->_merge_result( $ref_results );
 
@@ -108,14 +112,11 @@ event 'recieve_members' => sub {
 		;
 
 	# close lobby actor
-	$self->lobby->yield( 'exit' );
-
-	# release me! (XXX POE is too bad)
-	$self->release_session;
+	$self->lobby->exit;
 };
 
 
-event 'bye' => sub {
+sub bye {
 	# warn 'bye';
 };
 
