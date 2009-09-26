@@ -16,12 +16,9 @@ sub load {
 
 
 package Chaberi::Backdoor::LoadMembers::Task;
-use MooseX::POE;
+use Moose;
 use POE::Component::Chaberi::Lobby;
 use Chaberi::Backdoor::Statistics;
-
-with 'POE::Component::Chaberi::Role::NextEvent',
-     'POE::Component::Chaberi::Role::RetainSession';
 
 has cb => (
 	isa      => 'CodeRef',
@@ -80,13 +77,7 @@ sub load {
 	);
 };
 
-# events from client ====================================
-sub START {
-	my ($self) = @_[OBJECT, ARG0 .. $#_];
-	$self->retain_session;  # XXX POE is too bad
-}
 
-# events from POE::Component::Chaberi::Lobby ============
 sub go {
 	my $self = shift;
 	my ($lobby) = @_;
@@ -121,7 +112,9 @@ sub bye {
 };
 
 
-no  MooseX::POE;
+__PACKAGE__->meta->make_immutable;
+no  Moose;
+
 1;
 
 
