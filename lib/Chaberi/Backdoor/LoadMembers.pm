@@ -72,7 +72,10 @@ sub load {
 	Chaberi::AnyEvent::Lobby::connect
 		address => $self->host,
 		port    => $self->port,
-		sub { $self->on_connect(@_); },
+		sub {
+			$self->on_connect(@_);
+			undef $self;
+		},
 	;
 };
 
@@ -85,6 +88,7 @@ sub on_connect {
 		ref_room_ids => $self->room_ids,
 		cb           => sub {
 			$self->recieve_members(@_);
+			undef $self;
 		},
 	);
 };
@@ -102,6 +106,7 @@ sub recieve_members {
 		;
 
 	# close lobby
+	$self->lobby->shutdown;
 	$self->lobby( undef );
 };
 
