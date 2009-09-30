@@ -21,7 +21,11 @@ package Chaberi::Backdoor::Collector::Task;
 use utf8;
 use Moose;
 use AnyEvent;
+use Coro ();
+use Coro::AnyEvent ();
 use Chaberi::Backdoor::SearchPages;
+use Chaberi::Backdoor::Statistics;
+use Chaberi::Backdoor::LoadMembers;
 
 has cb => (
 	isa      => 'CodeRef',
@@ -117,15 +121,18 @@ sub collect{
 	my $cv = AE::cv;
 	my %done;
 
-	for (@{ $self->urls }){
+	for my $ref_url (@{ $self->urls }){
+		my ($url, $name) = @$ref_url;
+
 		$cv->begin;
-		Chaberi::Backdoor::SearchPages::search
-			$_->[0], 
-			sub {
-				my ( $page ) = @_;
-				$done{ $page->{url} } = $page;
-				$cv->end;
-			};
+		Coro::async {
+			my $page = Chaberi::Backdoor::SearchPages::search $url;
+			$page = Chaberi::Backdoor::LoadMembers::load $page;
+			$page = Chaberi::Backdoor::Statistics::update $page;
+
+			$done{ $page->{url} } = $page;
+			$cv->end;
+		};
 	}
 
 	$cv->cb(sub {

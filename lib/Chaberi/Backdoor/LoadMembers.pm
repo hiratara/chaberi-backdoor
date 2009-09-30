@@ -1,52 +1,16 @@
 package Chaberi::Backdoor::LoadMembers;
 use strict;
 use warnings;
-
-# $page, k1 => v1, k2 => v2, ..., $cb
-sub load {
-	my $page = shift;
-	my $cb   = pop;
-	my %params = @_;
-
-	Chaberi::Backdoor::LoadMembers::Task->new(
-		page => $page,
-		cb   => $cb,
-	)->load;
-}
-
-
-package Chaberi::Backdoor::LoadMembers::Task;
-use Moose;
 use Chaberi::Coro ();
-use Chaberi::Backdoor::Statistics;
 
-has cb => (
-	isa      => 'CodeRef',
-	is       => 'ro',
-	required => 1,
-);
-
-has page => (
-	isa      => 'HashRef',
-	is       => 'ro',
-	required => 1,
-);
-
-# Subroutines
-sub host { shift->page->{_host} }
-sub port { shift->page->{_port} }
-sub room_ids { [ map { $_->{_id} } @{ shift->page->{rooms} } ] }
-
-
-# merge result into page data (i.e. change page field destructively.)
+# merge result into page data (i.e. change $page field destructively.)
 sub _merge_result {
-	my $self = shift;
-	my ( $ref_results ) = @_;
+	my ( $page, $ref_results ) = @_;
 
 	my %result = map { $_->{room_id} => $_->{room_status} } @$ref_results;
 
-	for my $ref_room ( @{ $self->page->{rooms} } ){
-		my $status = $result{ $ref_room->{_id} } or die;
+	for my $ref_room ( @{ $page->{rooms} } ){
+		my $status = $result{ delete $ref_room->{_id} } or die;
 		my @members = map { {
 			name  => $_->name,
 			range => undef, # we've not known it yet.
@@ -55,32 +19,22 @@ sub _merge_result {
 		$ref_room->{ad}      = $status->advertising;
 		$ref_room->{members} = \@members;
 	}
-
-	# cleaning.
-	delete $_->{_id} for @{ $self->page->{rooms} };
-	delete $self->page->{_host};
-	delete $self->page->{_port};
 }
 
-
+# my $page = Chaberi::Backdoor::LoadMembers::load $page;
 sub load {
-	my $self = shift;
-	Coro::async {
-		my $ref_results = Chaberi::Coro::get_members
-			$self->host, $self->port, $self->room_ids;
+	my $page = shift;
 
-		$self->_merge_result( $ref_results );
+	my $host = delete $page->{_host};
+	my $port = delete $page->{_port};
+	my @room_ids = map { $_->{_id} } @{ $page->{rooms} };
 
-		Chaberi::Backdoor::Statistics::update
-			$self->page,
-			$self->cb
-			;
-	};
+	my $ref_results = Chaberi::Coro::get_members $host, $port, \@room_ids;
+
+	_merge_result $page, $ref_results;
+
+	return $page;
 };
-
-
-__PACKAGE__->meta->make_immutable;
-no  Moose;
 
 1;
 

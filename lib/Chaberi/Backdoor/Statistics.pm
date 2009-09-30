@@ -6,32 +6,23 @@ use warnings;
 # $page, k1 => v1, k2 => v2, ..., $cb
 sub update {
 	my $page = shift;
-	my $cb   = pop;
 	my %params = @_;
 
 	my $schema = delete $params{schema};
 	my $now    = delete $params{now_epoch};
 
-	Chaberi::Backdoor::Statistics::Task->new(
+	return Chaberi::Backdoor::Statistics::DB->new(
 		page => $page,
-		cb   => $cb,
 		($schema ? (schema    => $schema) : ()),
 		($now    ? (now_epoch => $now   ) : ()),
 	)->update;
 }
 
-package Chaberi::Backdoor::Statistics::Task;
+package Chaberi::Backdoor::Statistics::DB;
 use Moose;
 use Chaberi::Backdoor::Schema;
 
 our $MARGINE = 20 * 60;  # 範囲が連続していると見なす幅
-
-
-has cb => (
-	isa      => 'CodeRef',
-	is       => 'ro',
-	required => 1,
-);
 
 
 has page => (
@@ -117,17 +108,20 @@ sub _merge_statistics{
 	}
 }
 
+
 sub update {
 	my $self = shift;
 
 	$self->_merge_statistics;
 
-	# callback with page data
-	$self->cb->( $self->page );
+	# return page data
+	return $self->page;
 };
+
 
 __PACKAGE__->meta->make_immutable;
 no  Moose;
+
 1;
 
 

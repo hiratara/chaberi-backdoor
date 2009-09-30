@@ -19,7 +19,7 @@ sub run{
 package Chaberi::Backdoor::Task;
 use Moose;
 use Template;
-use Chaberi::Backdoor::SearchPages;
+use Chaberi::Backdoor::Collector;
 
 has timeout_sec => (
 	isa => 'Int',

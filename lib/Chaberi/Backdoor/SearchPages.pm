@@ -1,42 +1,12 @@
 package Chaberi::Backdoor::SearchPages;
 use strict;
 use warnings;
-
-# $url, k1 => v1, k2 => v2, ..., $cb
-sub search {
-	my $url = shift;
-	my $cb  = pop;
-	my %params = @_;
-
-	Chaberi::Backdoor::SearchPages::Task->new(
-		url => $url,
-		cb  => $cb,
-	)->search;
-}
-
-
-package Chaberi::Backdoor::SearchPages::Task;
-use Moose;
 use Chaberi::Coro ();
-use Chaberi::Backdoor::LoadMembers;
-use Chaberi::Backdoor::Collector;
 
-has cb => (
-	isa      => 'CodeRef',
-	is       => 'ro',
-	required => 1,
-);
-
-has url => (
-	isa      => 'Str',
-	is       => 'ro',
-	requires => 1,
-);
 
 # subroutines==================================================================
 sub _create_page{
-	my $self = shift;
-	my ( $parsed ) = @_;
+	my ( $url, $parsed ) = @_;
 
 	my @rooms = map { {
 		name => $_->{name}, 
@@ -48,7 +18,7 @@ sub _create_page{
 
 	return {
 		name  => undef,  # we don't know.
-		url   => $self->url,
+		url   => $url,
 		rooms => \@rooms,
 		_host => $parsed->{host},
 		_port => $parsed->{port},
@@ -56,37 +26,26 @@ sub _create_page{
 }
 
 
+# my $page = Chaberi::Coro::parse_lobby $url;
 sub search{
-	my $self = shift;
+	my $url = shift;
 
-	Coro::async {
-		my $parsed = Chaberi::Coro::parse_lobby $self->url;
+	my $parsed = Chaberi::Coro::parse_lobby $url;
 
-		# XXX I should implement codes to recovery.
-		unless($parsed){
-			# Failure. Return to Collector immediately.
-			$self->cb->(
-				{  # Callback with empty room data.
-					name  => undef,
-					url   => $self->url,
-					rooms => [],
-				},
-			);
-			return;
-		}
+	# XXX I should implement codes to recovery.
+	unless($parsed){
+		# Failure. Return to Collector immediately.
+		return{  # Return empty room data.
+			name  => undef,
+			url   => $url,
+			rooms => [],
+		};
+	}
 
-		# Pass results to next task.
-		Chaberi::Backdoor::LoadMembers::load
-			$self->_create_page($parsed),
-			$self->cb;
-
-		# warn "$parsed->{host},$parsed->{port},$url\n";
-	};
+	# warn "$parsed->{host},$parsed->{port},$url\n";
+	return _create_page $url, $parsed;
 };
 
-
-__PACKAGE__->meta->make_immutable;
-no  Moose;
 1;
 
 =head1 NAME
