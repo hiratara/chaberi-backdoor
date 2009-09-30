@@ -17,7 +17,7 @@ sub search {
 
 package Chaberi::Backdoor::SearchPages::Task;
 use Moose;
-use Chaberi::AnyEvent::Lobby::WWW;
+use Chaberi::Coro ();
 use Chaberi::Backdoor::LoadMembers;
 use Chaberi::Backdoor::Collector;
 
@@ -59,38 +59,29 @@ sub _create_page{
 sub search{
 	my $self = shift;
 
-	Chaberi::AnyEvent::Lobby::WWW::parse_lobby
-		$self->url,
-		sub { $self->recieve_parsed(@_) };
-}
+	Coro::async {
+		my $parsed = Chaberi::Coro::parse_lobby $self->url;
 
+		# XXX I should implement codes to recovery.
+		unless($parsed){
+			# Failure. Return to Collector immediately.
+			$self->cb->(
+				{  # Callback with empty room data.
+					name  => undef,
+					url   => $self->url,
+					rooms => [],
+				},
+			);
+			return;
+		}
 
-# cb for Chaberi::AnyEvent::Lobby::WWW::parse_lobby
-sub recieve_parsed {
-	my $self = shift;
-	my ($parsed, $url) = @_;
+		# Pass results to next task.
+		Chaberi::Backdoor::LoadMembers::load
+			$self->_create_page($parsed),
+			$self->cb;
 
-	$self->url eq $url or die 'got unknown URL:' . $url;
-
-	# XXX I should implement codes to recovery.
-	unless($parsed){
-		# Failure. Return to Collector immediately.
-		$self->cb->(
-			{  # Callback with empty room data.
-				name  => undef,
-				url   => $self->url,
-				rooms => [],
-			},
-		);
-		return;
-	}
-
-	# Pass results to next task.
-	Chaberi::Backdoor::LoadMembers::load
-		$self->_create_page($parsed),
-		$self->cb;
-
-	# warn "$parsed->{host},$parsed->{port},$url\n";
+		# warn "$parsed->{host},$parsed->{port},$url\n";
+	};
 };
 
 

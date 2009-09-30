@@ -17,7 +17,7 @@ sub load {
 
 package Chaberi::Backdoor::LoadMembers::Task;
 use Moose;
-use Chaberi::AnyEvent::Lobby;
+use Chaberi::Coro ();
 use Chaberi::Backdoor::Statistics;
 
 has cb => (
@@ -30,10 +30,6 @@ has page => (
 	isa      => 'HashRef',
 	is       => 'ro',
 	required => 1,
-);
-
-has 'lobby' => (
-	is => 'rw',
 );
 
 # Subroutines
@@ -69,45 +65,17 @@ sub _merge_result {
 
 sub load {
 	my $self = shift;
-	Chaberi::AnyEvent::Lobby::connect
-		address => $self->host,
-		port    => $self->port,
-		sub {
-			$self->on_connect(@_);
-			undef $self;
-		},
-	;
-};
+	Coro::async {
+		my $ref_results = Chaberi::Coro::get_members
+			$self->host, $self->port, $self->room_ids;
 
+		$self->_merge_result( $ref_results );
 
-sub on_connect {
-	my $self = shift;
-	my ( $lobby ) = @_;
-	$self->lobby( $lobby );
-	$self->lobby->get_members(
-		ref_room_ids => $self->room_ids,
-		cb           => sub {
-			$self->recieve_members(@_);
-			undef $self;
-		},
-	);
-};
-
-
-sub recieve_members {
-	my $self = shift;
-	my ( $ref_results ) = @_;
-
-	$self->_merge_result( $ref_results );
-
-	Chaberi::Backdoor::Statistics::update
-		$self->page,
-		$self->cb
-		;
-
-	# close lobby
-	$self->lobby->shutdown;
-	$self->lobby( undef );
+		Chaberi::Backdoor::Statistics::update
+			$self->page,
+			$self->cb
+			;
+	};
 };
 
 
