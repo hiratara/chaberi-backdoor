@@ -17,7 +17,7 @@ sub run{
 package Chaberi::Backdoor::Task;
 use Moose;
 use Template;
-use AnyEvent ();
+use Coro::Timer ();
 use Chaberi::Backdoor::Collector;
 
 has timeout_sec => (
@@ -30,11 +30,6 @@ has _start_epoch => (
 	isa     => 'Int',
 	is      => 'ro',
 	default => sub { scalar time },
-);
-
-has _timeout_timer => (
-	isa => 'Maybe[Object]',
-	is  => 'rw',
 );
 
 
@@ -61,12 +56,12 @@ sub run {
 
 	my $info = do {
 		# set timeout
-		my $_timeout_timer = AE::timer $self->timeout_sec, 0, sub {
-			# XXX should not die with AnyEvent loop
-			die "timeouted\n";
-		};
+		my $timeouted = Coro::Timer::timeout $self->timeout_sec;
 
-		Chaberi::Backdoor::Collector::collect;
+		my $info = Chaberi::Backdoor::Collector::collect;
+
+		die "timeouted\n" if $timeouted;
+		$info;
 	};
 
 	my $tt = Template->new(
