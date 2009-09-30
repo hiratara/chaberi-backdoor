@@ -4,13 +4,11 @@ use warnings;
 
 # k1 => v1, k2 => v2, ..., $cb
 sub run{
-	my $cb = pop;
 	my %params = @_;
 
 	my $timeout = delete $params{timeout_sec};
 
 	Chaberi::Backdoor::Task->new(
-		cb => $cb,
 		($timeout ? (timeout_sec => $timeout) : ()),
 	)->run;
 }
@@ -19,18 +17,13 @@ sub run{
 package Chaberi::Backdoor::Task;
 use Moose;
 use Template;
+use AnyEvent ();
 use Chaberi::Backdoor::Collector;
 
 has timeout_sec => (
 	isa => 'Int',
 	is  => 'ro',
 	default => 60 * 3,
-);
-
-has cb => (
-	isa      => 'CodeRef',
-	is       => 'ro',
-	required => 1,
 );
 
 has _start_epoch => (
@@ -63,12 +56,18 @@ sub _level {
 	}
 }
 
-sub finished {
+sub run {
 	my $self = shift;
-	my ($info) = @_;
 
-	# reset timeout timer
-	$self->_timeout_timer( undef );
+	my $info = do {
+		# set timeout
+		my $_timeout_timer = AE::timer $self->timeout_sec, 0, sub {
+			# XXX should not die with AnyEvent loop
+			die "timeouted\n";
+		};
+
+		Chaberi::Backdoor::Collector::collect;
+	};
 
 	my $tt = Template->new(
 		ENCODING => 'utf8', 
@@ -84,24 +83,9 @@ sub finished {
 	print $fh $out;
 	close $fh;
 
-	# callback
-	$self->cb->();
-};
-
-sub run {
-	my $self = shift;
-
-	Chaberi::Backdoor::Collector::collect
-		sub { $self->finished(@_); };
-
-	# set timeout
-	$self->_timeout_timer( 
-		AE::timer $self->timeout_sec, 0, sub {
-			# XXX should not die with AnyEvent loop
-			die "timeouted\n";
-		}
-	);
+	return
 }
+
 
 __PACKAGE__->meta->make_immutable;
 no  Moose;
