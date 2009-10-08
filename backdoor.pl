@@ -78,7 +78,7 @@ sub crowl_url {
 	my ( $ref_url ) = @_;
 	my ($url, $name) = @$ref_url;
 
-	my $lobby = Chaberi::Coro::parse_lobby $url   or return undef;
+	my $lobby = Chaberi::Coro::lobby_page $url or return undef;
 
 	my $room_data = Chaberi::Coro::get_members 
 		$lobby->{host}, 
