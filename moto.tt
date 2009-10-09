@@ -62,7 +62,11 @@ td.member-names{}
 ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。
 </p>
 
-<input id="search"><input id="search-button" type="button" value="人名で絞込">
+<input name="match" type="checkbox" value=".member-names" 
+ checked="checked">人名/
+<input name="match" type="checkbox" value=".room-ad">呼込/
+<input name="match" type="checkbox" value=".room-name">部屋名<br>
+<input id="search"><input id="search-button" type="button" value="絞込">
 <img id="wait-anime" src="img/wait.gif" style="display: none;">
 <br><br>
 
