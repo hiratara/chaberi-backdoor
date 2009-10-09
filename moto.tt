@@ -49,6 +49,9 @@ td.member-names{}
   border: 1px #1C79C6 solid;
 }
 </style>
+<script src="js/jquery-1.3.2.min.js"></script>
+<script src="js/jsdeferred.jquery.091009.js"></script>
+<script src="js/search.js"></script>
 </head>
 
 <body>
@@ -58,6 +61,10 @@ td.member-names{}
 <p>
 ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。
 </p>
+
+<input id="search"><input id="search-button" type="button" value="人名で絞込">
+<img id="wait-anime" src="img/wait.gif" style="display: none;">
+<br><br>
 
 <table class="display-table">
 [% FOR page = info.pages %]
