@@ -124,8 +124,9 @@ sub crowl_url {
 
 	# return "$page"
 	return {
-		rooms => \@rooms,
+		url   => $url   ,
 		name  => $name  , # add page name destructively
+		rooms => \@rooms,
 	};
 }
 
