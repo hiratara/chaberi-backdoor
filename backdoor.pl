@@ -96,18 +96,18 @@ sub crowl_url {
 		});
 
 		my @members;
-		for my $member ( $status->all_members ){
+		for my $member ( @{ $status->{members} } ){
 			my $range;
 			if( $obj_room ){
 				my $obj_nick = $schema->resultset('Nick')->find_or_new(
-					name => $member->name,
+					name => $member->{name},
 				)->insert();
 
 				my $obj_range = _calc_range $obj_room, $obj_nick ;
 				$range = [$obj_range->epoch1, $obj_range->epoch2];
 			}
 			push @members, {
-				name  => $member->name,
+				name  => $member->{name},
 				range => $range,
 				# Do we need neither $_->status nor $_->is_owner ??
 			};
@@ -116,7 +116,7 @@ sub crowl_url {
 		push @rooms, {
 			name    => $room->{name}, 
 			url     => $room->{link}, 
-			ad      => $status->advertising,
+			ad      => $status->{advertising},
 			members => \@members,
 		};
 
