@@ -10,6 +10,8 @@ use Coro::AnyEvent ();
 use Chaberi::Coro;
 use Chaberi::Backdoor::Schema;
 use Template;
+use Encode;
+use JSON;
 
 my $start_epoch = time;
 
@@ -170,22 +172,31 @@ sub _level {
 sub output{
 	my $info = shift;
 
+	my $data = {
+		info      => $info,
+		finished  => scalar localtime,
+		exec_time => time - $start_epoch,
+	};
+
 	my $tt = Template->new(
 		ENCODING => 'utf8', 
 	);
-	$tt->process('moto.tt', {
-		info      => $info,
-		FUNC_LV   => \&_level,
-		finished  => scalar localtime,
-		exec_time => time - $start_epoch,
-	}, \my $out) or die $tt->error;
+	$tt->process('moto.tt', {FUNC_LV => \&_level, %$data}, \my $out) 
+	                                                        or die $tt->error;
 
-	open my $fh, '>:utf8', 'out.html' or die;
-	print $fh $out;
-	close $fh;
+	{
+		open my $fh, '>:utf8', 'out.html' or die;
+		print $fh $out;
+		close $fh;
+	}
+
+	{
+		open my $fh, '>:utf8', 'out.json' or die;
+		print $fh JSON->new->utf8( 0 )->encode( $data );
+		close $fh;
+	}
 
 	return
-
 }
 
 
