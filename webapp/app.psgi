@@ -51,10 +51,13 @@ sub get_connection($){
             };
 
             $connections{$host} = $lobby;
-            $lobby->on_disconnect( sub {
+
+            my $delete_connection = sub {
                 warn "disconnect $host" if $ENV{CHABERI_DEBUG};
                 delete $connections{$host};
-            } );
+            };
+            $lobby->on_disconnect( $delete_connection );
+            $lobby->on_error( $delete_connection );
 
             $do_rent->();
         });
@@ -85,9 +88,17 @@ my $app = sub {
                 return;
             }
 
+            my $timeout = AE::timer 30, 0, sub {
+                $lobby->shutdown;
+                $respond->([500,[],["timeout\n"]]);
+            };
+
             $lobby->get_members(
                 ref_room_ids => [$req->param( 'room' )],
-                cb           => sub { $got_results->send($lobby, $_[0]) },
+                cb           => sub {
+                    undef $timeout;
+                    $got_results->send($lobby,$_[0])
+                },
             );
         });
 
