@@ -6,8 +6,15 @@ use Plack::Request;
 use Plack::Response;
 use JSON;
 
-sub get_connection($){
-    my ( $address, $port ) = split ':', $_[0];
+my %connections;
+my %now_using;
+
+sub _connect($){
+    my $host = shift;
+    warn 'connect $host' if $ENV{CHABERI_DEBUG};
+
+    my ( $address, $port ) = split ':', $host;
+
     my $cv = AE::cv;
     my $lobby = Chaberi::AnyEvent::Lobby->new(
         address    => $address, port => $port,
@@ -18,9 +25,42 @@ sub get_connection($){
     return $cv;
 }
 
+sub get_connection($){
+    my $host = shift;
+    my $future = AE::cv;
+
+    my $do_rent = sub {
+        $now_using{$host} = 1;
+        $future->send( $connections{$host} );
+    };
+
+    if( $connections{$host} ){
+        if( $now_using{$host} ){
+            # TODO: wait for finishing to use
+            $future->croak( 'now using. sorry.' );
+            return;
+        }
+        $do_rent->();
+    }else{
+        (_connect $host)->cb(sub{
+            # initialize the pool
+            my $lobby = $_[0]->recv;
+            $connections{$host} = $lobby;
+            $lobby->on_disconnect( sub {
+                warn "disconnect $host" if $ENV{CHABERI_DEBUG};
+                delete $connections{$host};
+            } );
+
+            $do_rent->();
+        });
+    }
+
+    return $future;
+}
+
 sub close_connection($){
     my $lobby = shift;
-    $lobby->shutdown;
+    delete $now_using{ $lobby->address . ':' . $lobby->port };
 }
 
 my $app = sub {
