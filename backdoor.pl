@@ -45,7 +45,7 @@ sub _get_members($$$){
 	                    ('port=' . $port), 
 	                    (map { 'room=' . $_ } @$ref_rooms);
 
-	http_get $url, Coro::rouse_cb;
+	http_get $url, timeout => 30, Coro::rouse_cb;
 	my ($data, $headers) = Coro::rouse_wait;
 	return undef unless ($headers->{Status} =~ /^2/);
 	return JSON->new->utf8(1)->decode($data);
