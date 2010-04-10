@@ -44,7 +44,12 @@ sub get_connection($){
     }else{
         (_connect $host)->cb(sub{
             # initialize the pool
-            my $lobby = $_[0]->recv;
+            my $lobby = eval { $_[0]->recv };
+            if($@){ 
+                $future->croak( $_ );
+                return;
+            };
+
             $connections{$host} = $lobby;
             $lobby->on_disconnect( sub {
                 warn "disconnect $host" if $ENV{CHABERI_DEBUG};
