@@ -11,7 +11,7 @@ my %now_using;
 
 sub _connect($){
     my $host = shift;
-    warn 'connect $host' if $ENV{CHABERI_DEBUG};
+    warn "connect $host" if $ENV{CHABERI_DEBUG};
 
     my ( $address, $port ) = split ':', $host;
 
