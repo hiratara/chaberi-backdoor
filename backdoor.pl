@@ -4,6 +4,7 @@ use warnings;
 use utf8;
 use AnyEvent::Impl::EV ();
 use AnyEvent ();
+use AnyEvent::HTTP;
 use Coro;
 use Coro::Timer ();
 use Coro::AnyEvent ();
@@ -35,6 +36,20 @@ my @urls = (
 
 my $timeout = 60 * 3;
 my $margine = 20 * 60;  # 範囲が連続していると見なす幅
+
+
+sub _get_members($$$){
+	my ( $address, $port, $ref_rooms) = @_;
+	my $url = 'http://localhost:10081?' . 
+	          join '&', ('address=' . $address), 
+	                    ('port=' . $port), 
+	                    (map { 'room=' . $_ } @$ref_rooms);
+
+	http_get $url, Coro::rouse_cb;
+	my ($data, $headers) = Coro::rouse_wait;
+	return undef unless ($headers->{Status} =~ /^2/);
+	return JSON->new->utf8(1)->decode($data);
+}
 
 
 sub _calc_range{
@@ -82,10 +97,9 @@ sub crowl_url {
 
 	my $lobby = Chaberi::Coro::lobby_page $url or return undef;
 
-	my $room_data = Chaberi::Coro::get_members 
-		$lobby->{host}, 
-		$lobby->{port}, 
-		[ map { $_->{id} } @{ $lobby->{rooms} } ] or return undef;
+	my $room_data = _get_members $lobby->{host}, $lobby->{port}, 
+	                             [ map { $_->{id} } @{ $lobby->{rooms} } ] 
+	    or return undef;
 	my %statuses = map { $_->{room_id} => $_->{room_status} } @$room_data;
 
 	my $schema = Chaberi::Backdoor::Schema->default_schema;
