@@ -12,6 +12,18 @@ my %connections;  # 'www.hoge.com:80' => CONNECTION
 my %now_using;    # 'www.hoge.com:80' => 1
 my %last_failure; # 'www.hoge.com'    => time()
 
+sub _status{
+    (
+        "[connections]\n",
+        ( map{ $_, ($now_using{$_} ? '(USING)' : () ), "\n" } 
+            keys %connections ),
+        "\n",
+        "[failures]\n",
+        ( map{ $_, ' until ', scalar localtime $last_failure{$_}, "\n" } 
+            keys %last_failure ),
+    );
+}
+
 sub _connect($){
     my $host = shift;
     warn "connect $host" if $ENV{CHABERI_DEBUG};
@@ -109,6 +121,9 @@ sub close_connection($){
 
 my $app = sub {
     my $req = Plack::Request->new( $_[0] );
+
+    return [200, ['Content-Type' => 'text/plain'], [_status]]
+        if $req->path_info eq '/status';
 
     sub {
         my $respond = shift;
