@@ -16,11 +16,11 @@ sub _status{
     (
         "[connections]\n",
         ( map{ $_, ($now_using{$_} ? '(USING)' : () ), "\n" } 
-            keys %connections ),
+            sort keys %connections ),
         "\n",
         "[failures]\n",
         ( map{ $_, ' until ', scalar localtime $last_failure{$_}, "\n" } 
-            keys %last_failure ),
+            sort keys %last_failure ),
     );
 }
 
