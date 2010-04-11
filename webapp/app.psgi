@@ -77,7 +77,7 @@ sub get_connection($){
         if( $now_using{$host} ){
             # TODO: wait for finishing to use
             $future->croak( 'now using. sorry.' );
-            return;
+            return $future;
         }
         $do_rent->();
     }else{
@@ -86,7 +86,7 @@ sub get_connection($){
             $future->croak(
                 'Under cool-down until ' . (scalar localtime $until)
             );
-            return;
+            return $future;
         }
 
         (_connect $host)->cb(sub{
@@ -95,7 +95,7 @@ sub get_connection($){
             if($@){ 
                 _record_failure $host if $@ =~ /can't\s*connect/i;
                 $future->croak( $@ );
-                return;
+                return $future;
             };
 
             $connections{$host} = $lobby;
