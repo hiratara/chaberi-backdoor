@@ -6,8 +6,11 @@ use Plack::Request;
 use Plack::Response;
 use JSON;
 
-my %connections;
-my %now_using;
+our $RETRY_PACE = 60 * 5;
+
+my %connections;  # 'www.hoge.com:80' => CONNECTION
+my %now_using;    # 'www.hoge.com:80' => 1
+my %last_failure; # 'www.hoge.com'    => time()
 
 sub _connect($){
     my $host = shift;
@@ -18,11 +21,35 @@ sub _connect($){
     my $cv = AE::cv;
     my $lobby = Chaberi::AnyEvent::Lobby->new(
         address    => $address, port => $port,
-        on_error   => sub { $cv->croak(@_) },
+        on_error   => sub {
+            # connecting failure
+            my ($lobby, @msg) = @_; 
+            $cv->croak(join ',', @msg);
+        },
         on_connect => sub { $cv->send( $_[0] ) },
     );
 
     return $cv;
+}
+
+sub _record_failure($){
+    my $host = shift;
+    $host =~ s/:[^:]+$//;
+    $last_failure{$host} = time;
+}
+
+sub _wait_until($){
+    my $host = shift;
+    (my $address = $host) =~ s/:[^:]+$//;
+
+    return unless $last_failure{$address};
+
+    if( time < $RETRY_PACE + $last_failure{$address} ){
+        return $RETRY_PACE + $last_failure{$address};
+    }else{
+        delete $last_failure{$address};
+        return;
+    }
 }
 
 sub get_connection($){
@@ -42,11 +69,20 @@ sub get_connection($){
         }
         $do_rent->();
     }else{
+        # check the last failure to avoid sending request frequently.
+        if( my $until = _wait_until $host ){
+            $future->croak(
+                'Under cool-down until ' . (scalar localtime $until)
+            );
+            return;
+        }
+
         (_connect $host)->cb(sub{
             # initialize the pool
             my $lobby = eval { $_[0]->recv };
             if($@){ 
-                $future->croak( $_ );
+                _record_failure $host if $@ =~ /can't\s*connect/i;
+                $future->croak( $@ );
                 return;
             };
 
