@@ -1,78 +1,41 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta http-equiv="Refresh" content="240">
+<meta http-equiv="Content-Style-Type" content="text/css; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="./chaberi_backdoor.css">
 <title>チャベリ 裏口２ α版</title>
-<style>
-body {
-  font-size: 10px;
-}
-#copyright{
-  align: center;
-  color: #999;
-}
-td {
-  font-size: 10px;
-}
-td.page-name{
-  white-space: nowrap;
-}
-td.room-name{
-  white-space: nowrap;
-}
-td.room-ad{
-  white-space: nowrap;
-}
-td.member-names{}
-
-.member-name-lv1{
-  color: #509;
-}
-.member-name-lv2{
-  color: #817;
-}
-.member-name-lv3{
-  color: #B25;
-}
-.member-name-lv4{
-  color: #D43;
-}
-.member-name-lv5{
-  color: #F60;
-}
-.display-table {
-  border-collapse: collapse;
-  border: 1px #1C79C6 solid;
-}
-.display-table td{
-  border: 1px #1C79C6 solid;
-}
-</style>
-<script src="js/jquery-1.3.2.min.js"></script>
-<script src="js/jsdeferred.jquery.091009.js"></script>
-<script src="js/search.js"></script>
+<meta http-equiv="Refresh" content="240">
+<meta http-equiv="Content-Script-Type" content="text/javascript; charset=UTF-8">
+<script type="text/javascript" src="js/jquery-1.3.2.min.js"></script>
+<script type="text/javascript" src="js/jsdeferred.jquery.091009.js"></script>
+<script type="text/javascript" src="js/search.js"></script>
 </head>
-
 <body>
-<p>
-<a href="http://hiratara.dyndns.org/chaberi/">チャベリ 裏口</a>を高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。
-</p>
-<p>
-ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。
-</p>
-
-<input name="match" type="checkbox" value=".member-names" 
- checked="checked">人名/
-<input name="match" type="checkbox" value=".room-ad">呼込/
-<input name="match" type="checkbox" value=".room-name">部屋名<br>
-<input id="search"><input id="search-button" type="button" value="絞込">
-<img id="wait-anime" src="img/wait.gif" style="display: none;">
-<br><br>
-
-<table class="display-table">
+<h1><img src="./img/h1.png" alt="チャベリ 裏口２ α版"></h1>
+<ul>
+<li><a href="http://hiratara.dyndns.org/chaberi/">チャベリ 裏口</a>を高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。</li>
+<li>ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。</li>
+<li><img id="wait-anime" alt="GIF-アニメーション" src="img/wait.gif" style="display: none;"></li>
+</ul>
+<ul>
+<li class="search_menu"><input name="match" type="checkbox" value=".member-names" checked="checked">人名</li>
+<li class="search_menu"><input name="match" type="checkbox" value=".room-ad">呼込</li>
+<li class="search_menu"><input name="match" type="checkbox" value=".room-name">部屋名</li>
+<li><input id="search"><input id="search-button" type="button" value="絞込"></li>
+</ul>
+<table class="display-table" summary="チャベリをまとめた表です。右から一列目がメンバー、二列目がテーマ名、三列目がルーム名、四列目がそのチャットが属すパーク名です。">
 [% FOR page = info.pages %]
 [% FOR room = page.rooms %]
+<thead>
+<tr>
+<th>パーク</th>
+<th>ルーム名</th>
+<th>テーマ名</th>
+<th id="last_th">メンバー</th>
+</tr>
+</thead>
+<tbody>
 <tr>
 <td class="page-name">
 <a href="[% page.url | html %]">[% page.name | html %]</a>
@@ -85,20 +48,18 @@ td.member-names{}
 </td>
 <td class="member-names">
 [%~ FOR member = room.members ~%]
-   <span class="member-name-lv[% FUNC_LV(member) %]">[%~ member.name | html %]</span>[% IF ! loop.last %]　[% END ~%]
+<span class="member-name-lv[% FUNC_LV(member) %]">[%~ member.name | html %]</span>[% IF ! loop.last %]　[% END ~%]
 [%~ END ~%]
 </td>
 </tr>
 [% END %]
 [% END %]
+</tbody>
 </table>
-
-<p>
-完了時刻: [% finished %]<br>
-処理時間: [% exec_time %]秒<br>
-</p>
-
-<div id="copyright" align="right">&copy; 2009- hiratara</div>
-
+<ul>
+<li>完了時刻: [% finished %]</li>
+<li>処理時間: [% exec_time %]秒</li>
+</ul>
+<p id="copyright">&copy; 2009- hiratara</p>
 </body>
 </html>
