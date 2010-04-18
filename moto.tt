@@ -16,13 +16,12 @@
 <ul>
 <li><a href="http://hiratara.dyndns.org/chaberi/">チャベリ 裏口</a>を高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。</li>
 <li>ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。</li>
-<li><img id="wait-anime" alt="GIF-アニメーション" src="img/wait.gif" style="display: none;"></li>
 </ul>
 <ul>
 <li class="search_menu"><input name="match" type="checkbox" value=".member-names" checked="checked">人名</li>
 <li class="search_menu"><input name="match" type="checkbox" value=".room-ad">呼込</li>
 <li class="search_menu"><input name="match" type="checkbox" value=".room-name">部屋名</li>
-<li><input id="search"><input id="search-button" type="button" value="絞込"></li>
+<li><input id="search"><input id="search-button" type="button" value="絞込"><img id="wait-anime" alt="GIF-アニメーション" src="img/wait.gif" style="display: none;"></li>
 </ul>
 <table class="display-table" summary="チャベリをまとめた表です。右から一列目がメンバー、二列目がテーマ名、三列目がルーム名、四列目がそのチャットが属すパーク名です。">
 <thead>
