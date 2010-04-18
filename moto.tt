@@ -25,8 +25,6 @@
 <li><input id="search"><input id="search-button" type="button" value="絞込"></li>
 </ul>
 <table class="display-table" summary="チャベリをまとめた表です。右から一列目がメンバー、二列目がテーマ名、三列目がルーム名、四列目がそのチャットが属すパーク名です。">
-[% FOR page = info.pages %]
-[% FOR room = page.rooms %]
 <thead>
 <tr>
 <th>パーク</th>
@@ -36,6 +34,8 @@
 </tr>
 </thead>
 <tbody>
+[% FOR page = info.pages %]
+[% FOR room = page.rooms %]
 <tr>
 <td class="page-name">
 <a href="[% page.url | html %]">[% page.name | html %]</a>
