@@ -1,14 +1,14 @@
 @charset "UTF-8";
 
-/* ‘S‘Ì */
+/* å…¨ä½“ */
 *{
 border:0;
 margin:0;
 padding:0;
 }
-/* ‘S‘Ì@END */
+/* å…¨ä½“ã€€END */
 
-/* ƒuƒƒbƒNƒŒƒxƒ‹—v‘f */
+/* ãƒ–ãƒ­ãƒƒã‚¯ãƒ¬ãƒ™ãƒ«è¦ç´  */
 body{
 width:90%;
 margin:5px auto 0px;
@@ -29,9 +29,9 @@ border-collapse:collapse;
   text-align:right;
   color: #999;
 }
-/* ƒuƒƒbƒNƒŒƒxƒ‹—v‘f END */
+/* ãƒ–ãƒ­ãƒƒã‚¯ãƒ¬ãƒ™ãƒ«è¦ç´  END */
 
-/* ƒCƒ“ƒ‰ƒCƒ“—v‘f */
+/* ã‚¤ãƒ³ãƒ©ã‚¤ãƒ³è¦ç´  */
 a{
 text-decoration:none;
 color:#1c79c6;
@@ -81,4 +81,4 @@ color:#F60;
 .display-table td{
 border:1px #1C79C6 solid;
 }
-/* ƒCƒ“ƒ‰ƒCƒ“—v‘f END */
+/* ã‚¤ãƒ³ãƒ©ã‚¤ãƒ³è¦ç´  END */
