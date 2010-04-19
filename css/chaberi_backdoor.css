@@ -25,7 +25,7 @@ ul{
 	margin:30px auto 10px;
 	border-collapse: collapse;
 }
-#copyright{
+.copyright{
   text-align:right;
   color: #999;
 }
