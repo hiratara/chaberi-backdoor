@@ -40,7 +40,11 @@
 <a href="[% page.url | html %]">[% page.name | html %]</a>
 </td>
 <td class="room-name">
-<a href="[% room.url | html %]">[% room.name | html %]</a>
+[%~ IF room.url ~%]
+  <a href="[% room.url | html %]">[% room.name | html %]</a>
+[%~ ELSE ~%]
+  [% room.name | html %]
+[%~ END ~%]
 </td>
 <td class="room-ad">
 [% room.ad | html %]
