@@ -149,20 +149,21 @@ my $app = sub {
                 ref_room_ids => [$req->param( 'room' )],
                 cb           => sub {
                     undef $timeout;
-                    $got_results->send($lobby,$_[0])
+                    close_connection $lobby;
+
+                    $got_results->send( $_[0] );
                 },
             );
         });
 
         $got_results->cb(sub {
-            my ($lobby, $results) = $_[0]->recv;
+            my $results = $_[0]->recv;
 
             my $res = Plack::Response->new( 200 );
             $res->content_type('text/plain');
             $res->body( JSON->new->utf8(1)->encode($results) );
 
             $respond->( $res->finalize );
-            close_connection $lobby;
         });
     };
 };
