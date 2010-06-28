@@ -140,6 +140,7 @@ my $app = sub {
             }
 
             my $timeout = AE::timer 30, 0, sub {
+                close_connection $lobby;
                 $lobby->shutdown;
                 $respond->([500,[],["timeout\n"]]);
             };
