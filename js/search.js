@@ -1,8 +1,11 @@
 ( function ($) {
 
 $( function () {
+    var isSearching = false;
     $("#search-button").click( function () {
-        $("#search-button").attr("disabled", "disabled");
+        if (isSearching) return;
+
+        isSearching = true;
         $("#wait-anime").show();
 
         var str   = $( "#search" ).val();
@@ -29,8 +32,12 @@ $( function () {
             alert(e);
         }).next(function (){
             $("#wait-anime").hide();
-            $("#search-button").removeAttr("disabled");
+            isSearching = false;
         });
+    });
+
+    $("#search").keydown(function (e) {
+        if (e.keyCode == 13) $("#search-button").click();
     });
 });
 
