@@ -1,4 +1,16 @@
 *~
+*.bk
 database/
 out.html
 out.json
+cover_db
+META.yml
+Makefile
+blib
+inc
+pm_to_blib
+MANIFEST
+Makefile.old
+nytprof.out
+MANIFEST.bak
+*.sw[po]
