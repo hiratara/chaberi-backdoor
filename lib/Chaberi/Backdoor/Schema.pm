@@ -6,20 +6,12 @@ use base 'DBIx::Class::Schema';
 
 __PACKAGE__->load_classes;
 
-sub _get_current_dir{
-	(my $ret = $0) =~ s|[^/]+$|| or die;
-	return $ret;
-}
-
 *default_schema = do {
 	my $_schema;
 	sub {
 		my $class = shift;
 		$_schema = $class->connect(
-			sprintf(
-				'dbi:SQLite:dbname=%sdatabase/chat_watch', 
-				_get_current_dir(),
-			)
+			'dbi:SQLite:dbname=./database/chat_watch'
 		) unless $_schema;
 		return $_schema;
 	};

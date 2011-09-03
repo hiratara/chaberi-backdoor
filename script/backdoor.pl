@@ -2,6 +2,7 @@ package main;
 use strict;
 use warnings;
 use utf8;
+use File::Basename qw/dirname/;
 use AnyEvent::Impl::EV ();
 use AnyEvent ();
 use AnyEvent::HTTP;
@@ -182,6 +183,14 @@ sub _level {
 	}
 }
 
+my $config;
+sub config() {
+	unless ($config) {
+		my $file = dirname(__FILE__) . '/config.pl';
+		-f $file and $config = do $file;
+	}
+	return $config;
+}
 
 sub output{
 	my $info = shift;
@@ -195,17 +204,18 @@ sub output{
 	my $tt = Template->new(
 		ENCODING => 'utf8', 
 	);
-	$tt->process('moto.tt', {FUNC_LV => \&_level, %$data}, \my $out) 
-	                                                        or die $tt->error;
+	$tt->process(
+		dirname(__FILE__) . '/moto.tt', {FUNC_LV => \&_level, %$data}, \my $out
+	) or die $tt->error;
 
 	{
-		open my $fh, '>:utf8', 'out.html' or die;
+		open my $fh, '>:utf8', config->{output_dir} . '/out.html' or die;
 		print $fh $out;
 		close $fh;
 	}
 
 	{
-		open my $fh, '>:utf8', 'out.json' or die;
+		open my $fh, '>:utf8', config->{output_dir} . '/out.json' or die;
 		print $fh JSON->new->utf8( 0 )->encode( $data );
 		close $fh;
 	}
