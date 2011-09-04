@@ -4,7 +4,7 @@ use warnings;
 
 use base 'DBIx::Class';
 
-__PACKAGE__->load_components(qw/UTF8Columns PK::Auto Core/);
+__PACKAGE__->load_components(qw/PK::Auto Core/);
 __PACKAGE__->table("nick");
 __PACKAGE__->add_columns(
   "id",
@@ -12,7 +12,6 @@ __PACKAGE__->add_columns(
   "name",
   { data_type => "TEXT", is_nullable => 0, size => undef },
 );
-__PACKAGE__->utf8_columns(qw/name/);
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->has_many(
   "enter_ranges",

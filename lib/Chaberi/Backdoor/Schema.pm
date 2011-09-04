@@ -11,7 +11,8 @@ __PACKAGE__->load_classes;
 	sub {
 		my $class = shift;
 		$_schema = $class->connect(
-			'dbi:SQLite:dbname=./database/chat_watch'
+			'dbi:SQLite:dbname=./database/chat_watch',
+			undef, undef, {sqlite_unicode => 1}
 		) unless $_schema;
 		return $_schema;
 	};
