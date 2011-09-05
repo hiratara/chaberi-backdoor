@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use AnyEvent;
+use Data::Monad::CondVar;
 use Chaberi::AnyEvent::Lobby;
 use Plack::Request;
 use Plack::Response;
@@ -66,37 +67,34 @@ sub _wait_until($){
 
 sub get_connection($){
     my $host = shift;
-    my $future = AE::cv;
 
     my $do_rent = sub {
         $now_using{$host} = 1;
-        $future->send( $connections{$host} );
+        AnyEvent::CondVar->unit($connections{$host});
     };
 
     if( $connections{$host} ){
         if( $now_using{$host} ){
             # TODO: wait for finishing to use
+            my $future = AE::cv;
             $future->croak( 'now using. sorry.' );
             return $future;
         }
-        $do_rent->();
+        return $do_rent->();
     }else{
         # check the last failure to avoid sending request frequently.
         if( my $until = _wait_until $host ){
+            my $future = AE::cv;
             $future->croak(
                 'Under cool-down until ' . (scalar localtime $until)
             );
             return $future;
         }
 
-        (_connect $host)->cb(sub{
+        my $catch_cv = AE::cv;
+        (_connect $host)->flat_map(sub {
             # initialize the pool
-            my $lobby = eval { $_[0]->recv };
-            if($@){ 
-                _record_failure $host if $@ =~ /can't\s*connect/i;
-                $future->croak( $@ );
-                return $future;
-            };
+            my $lobby = shift;
 
             $connections{$host} = $lobby;
 
@@ -108,10 +106,16 @@ sub get_connection($){
             $lobby->on_error( $delete_connection );
 
             $do_rent->();
-        });
-    }
+        })->cb(sub {
+            my @v = eval{ $_[0]->recv };
+            $@ or return $catch_cv->(@v);
 
-    return $future;
+            _record_failure $host if $@ =~ /can't\s*connect/i;
+            $catch_cv->croak( $@ );
+        });
+
+        return $catch_cv;
+    }
 }
 
 sub close_connection($){
@@ -130,40 +134,38 @@ my $app = sub {
 
         my $host = $req->param('address') . ':' . $req->param('port');
 
-        my $got_results = AE::cv;
-        (get_connection $host)->cb(sub {
-            my $lobby = eval { $_[0]->recv; };
+        (get_connection $host)->flat_map(sub {
+            my $lobby = shift;
 
-            if($@){
-                $respond->([500,[],[$@]]);
-                return;
-            }
-
+            my $cv = AE::cv;
             my $timeout = AE::timer 30, 0, sub {
                 close_connection $lobby;
                 $lobby->shutdown;
-                $respond->([500,[],["timeout\n"]]);
+
+                $cv->croak("timeout\n");
             };
 
             $lobby->get_members(
                 ref_room_ids => [$req->param( 'room' )],
-                cb           => sub {
-                    undef $timeout;
-                    close_connection $lobby;
-
-                    $got_results->send( $_[0] );
-                },
+                cb           => $cv,
             );
-        });
+            $cv->map(sub {
+                undef $timeout;
+                close_connection $lobby;
 
-        $got_results->cb(sub {
-            my $results = $_[0]->recv;
+                $_[0];
+            });
+        })->map(sub {
+            my $results = shift;
 
             my $res = Plack::Response->new( 200 );
             $res->content_type('text/plain');
             $res->body( JSON->new->utf8(1)->encode($results) );
 
             $respond->( $res->finalize );
+        })->cb(sub {
+            eval { $_[0]->recv };
+            $@ and $respond->([500,[],[$@]]);
         });
     };
 };
