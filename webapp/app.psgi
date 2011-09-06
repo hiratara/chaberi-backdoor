@@ -79,35 +79,35 @@ sub get_connection($){
             return AnyEvent::CondVar->fail( 'now using. sorry.' );
         }
         return $do_rent->();
-    }else{
-        # check the last failure to avoid sending request frequently.
-        if( my $until = _wait_until $host ){
-            return AnyEvent::CondVar->fail(
-                'Under cool-down until ' . (scalar localtime $until)
-            );
-        }
-
-        return (_connect $host)->flat_map(sub {
-            # initialize the pool
-            my $lobby = shift;
-
-            $connections{$host} = $lobby;
-
-            my $delete_connection = sub {
-                warn "disconnect $host" if $ENV{CHABERI_DEBUG};
-                delete $connections{$host};
-            };
-            $lobby->on_disconnect( $delete_connection );
-            $lobby->on_error( $delete_connection );
-
-            $do_rent->();
-        })->catch(sub {
-            my $exception = shift;
-
-            _record_failure $host if $exception =~ /can't\s*connect/i;
-            AnyEvent::CondVar->fail($exception);
-        });
     }
+
+    # check the last failure to avoid sending request frequently.
+    if (my $until = _wait_until $host) {
+        return AnyEvent::CondVar->fail(
+            'Under cool-down until ' . (scalar localtime $until)
+        );
+    }
+
+    return (_connect $host)->flat_map(sub {
+        # initialize the pool
+        my $lobby = shift;
+
+        $connections{$host} = $lobby;
+
+        my $delete_connection = sub {
+            warn "disconnect $host" if $ENV{CHABERI_DEBUG};
+            delete $connections{$host};
+        };
+        $lobby->on_disconnect($delete_connection);
+        $lobby->on_error($delete_connection);
+
+        $do_rent->();
+    })->catch(sub {
+        my $exception = shift;
+
+        _record_failure $host if $exception =~ /can't\s*connect/i;
+        AnyEvent::CondVar->fail($exception);
+    });
 }
 
 sub close_connection($){
