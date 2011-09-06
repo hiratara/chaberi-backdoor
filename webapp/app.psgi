@@ -39,7 +39,8 @@ sub _connect($){
             my ($lobby, @msg) = @_; 
             $cv->croak(join ',', @msg);
         },
-        on_connect => sub { $cv->send( $_[0] ) },
+        # XXX Can't pass $cv directly. Seems Moose doesn't like overload magic.
+        on_connect => sub { $cv->($_[0]) },
     );
 
     return $cv;
