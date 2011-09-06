@@ -76,23 +76,18 @@ sub get_connection($){
     if( $connections{$host} ){
         if( $now_using{$host} ){
             # TODO: wait for finishing to use
-            my $future = AE::cv;
-            $future->croak( 'now using. sorry.' );
-            return $future;
+            return AnyEvent::CondVar->fail( 'now using. sorry.' );
         }
         return $do_rent->();
     }else{
         # check the last failure to avoid sending request frequently.
         if( my $until = _wait_until $host ){
-            my $future = AE::cv;
-            $future->croak(
+            return AnyEvent::CondVar->fail(
                 'Under cool-down until ' . (scalar localtime $until)
             );
-            return $future;
         }
 
-        my $catch_cv = AE::cv;
-        (_connect $host)->flat_map(sub {
+        return (_connect $host)->flat_map(sub {
             # initialize the pool
             my $lobby = shift;
 
@@ -106,15 +101,12 @@ sub get_connection($){
             $lobby->on_error( $delete_connection );
 
             $do_rent->();
-        })->cb(sub {
-            my @v = eval{ $_[0]->recv };
-            $@ or return $catch_cv->(@v);
+        })->catch(sub {
+            my $exception = shift;
 
-            _record_failure $host if $@ =~ /can't\s*connect/i;
-            $catch_cv->croak( $@ );
+            _record_failure $host if $exception =~ /can't\s*connect/i;
+            AnyEvent::CondVar->fail($exception);
         });
-
-        return $catch_cv;
     }
 }
 
@@ -137,23 +129,23 @@ my $app = sub {
         (get_connection $host)->flat_map(sub {
             my $lobby = shift;
 
-            my $cv = AE::cv;
-            my $timeout = AE::timer 30, 0, sub {
-                close_connection $lobby;
-                $lobby->shutdown;
-
-                $cv->croak("timeout\n");
-            };
-
             $lobby->get_members(
                 ref_room_ids => [$req->param( 'room' )],
-                cb           => $cv,
+                cb           => (my $cv = AE::cv),
             );
             $cv->map(sub {
-                undef $timeout;
                 close_connection $lobby;
 
                 $_[0];
+            })->timeout(30)->flat_map(sub {
+                my $results = shift;
+                return AnyEvent::CondVar->unit($results) if $results;
+
+                # timeouted
+                close_connection $lobby;
+                $lobby->shutdown;
+
+                AnyEvent::CondVar->fail("timeout\n");
             });
         })->map(sub {
             my $results = shift;
@@ -163,9 +155,9 @@ my $app = sub {
             $res->body( JSON->new->utf8(1)->encode($results) );
 
             $respond->( $res->finalize );
-        })->cb(sub {
-            eval { $_[0]->recv };
-            $@ and $respond->([500,[],[$@]]);
+        })->catch(sub {
+            $respond->([500, [], [@_]]);
+            AnyEvent::CondVar->unit(); # void
         });
     };
 };
