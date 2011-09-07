@@ -106,6 +106,8 @@ sub crowl_url {
 		});
 	})->map(sub {
 		my ($lobby, $room_data) = @_;
+		$lobby && $room_data or return;
+
 		my %statuses = map { $_->{room_id} => $_->{room_status} } @$room_data;
 
 		my $schema = Chaberi::Backdoor::Schema->default_schema;
