@@ -7,7 +7,6 @@ requires 'Template';
 requires 'Plack';
 requires 'Twiggy';
 requires 'JSON';
-requires 'Coro';
 
 tests 't/*.t';
 author_tests 'xt';

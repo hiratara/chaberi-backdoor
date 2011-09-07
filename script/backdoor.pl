@@ -6,11 +6,9 @@ use File::Basename qw/dirname/;
 use AnyEvent::Impl::EV ();
 use AnyEvent ();
 use AnyEvent::HTTP;
-use Coro;
-use Coro::Timer ();
-use Coro::AnyEvent ();
-use Chaberi::Coro;
+use Chaberi::AnyEvent::LobbyPage qw/chaberi_lobby_page/;
 use Chaberi::Backdoor::Schema;
+use Data::Monad::CondVar;
 use Template;
 use Encode;
 use JSON;
@@ -46,10 +44,11 @@ sub _get_members($$$){
 	                    ('port=' . $port), 
 	                    (map { 'room=' . $_ } @$ref_rooms);
 
-	http_get $url, timeout => 30, Coro::rouse_cb;
-	my ($data, $headers) = Coro::rouse_wait;
-	return undef unless ($headers->{Status} =~ /^2/);
-	return JSON->new->utf8(1)->decode($data);
+	as_cv { http_get $url, timeout => 30, $_[0] }->map(sub {;
+		my ($data, $headers) = @_;
+		return undef unless ($headers->{Status} =~ /^2/);
+		return JSON->new->utf8(1)->decode($data);
+	});
 }
 
 
@@ -96,73 +95,80 @@ sub crowl_url {
 	my ( $ref_url ) = @_;
 	my ($url, $name) = @$ref_url;
 
-	my $lobby = Chaberi::Coro::lobby_page $url or return undef;
-
-	my $room_data = _get_members $lobby->{host}, $lobby->{port}, 
-	                             [ map { $_->{id} } @{ $lobby->{rooms} } ] 
-	    or return undef;
-	my %statuses = map { $_->{room_id} => $_->{room_status} } @$room_data;
-
-	my $schema = Chaberi::Backdoor::Schema->default_schema;
-	my @rooms;
-	for my $room ( @{$lobby->{rooms}} ){
-		my $status = $statuses{ $room->{id} };
-
-		my $obj_room = $schema->resultset('Room')->find({
-			unique_key => $room->{link},
+	return chaberi_lobby_page($url)->flat_map(sub {
+		my $lobby = shift or return AnyEvent::CondVar->unit();
+		return _get_members(
+			$lobby->{host}, $lobby->{port}, 
+			[map { $_->{id} } @{$lobby->{rooms}}]
+		)->map(sub {
+			my $room_data = shift or return;
+			return $lobby, $room_data;
 		});
+	})->map(sub {
+		my ($lobby, $room_data) = @_;
+		my %statuses = map { $_->{room_id} => $_->{room_status} } @$room_data;
 
-		my @members;
-		for my $member ( @{ $status->{members} } ){
-			my $range;
-			if( $obj_room ){
-				my $obj_nick = $schema->resultset('Nick')->find_or_new(
-					name => $member->{name},
-				)->insert();
+		my $schema = Chaberi::Backdoor::Schema->default_schema;
+		my @rooms;
+		for my $room ( @{$lobby->{rooms}} ){
+			my $status = $statuses{ $room->{id} };
 
-				my $obj_range = _calc_range $obj_room, $obj_nick ;
-				$range = [$obj_range->epoch1, $obj_range->epoch2];
+			my $obj_room = $schema->resultset('Room')->find({
+				unique_key => $room->{link},
+			});
+
+			my @members;
+			for my $member ( @{ $status->{members} } ){
+				my $range;
+				if( $obj_room ){
+					my $obj_nick = $schema->resultset('Nick')->find_or_new(
+						name => $member->{name},
+					)->insert();
+
+					my $obj_range = _calc_range $obj_room, $obj_nick ;
+					$range = [$obj_range->epoch1, $obj_range->epoch2];
+				}
+				push @members, {
+					name  => $member->{name},
+					range => $range,
+					# Do we need neither $_->status nor $_->is_owner ??
+				};
 			}
-			push @members, {
-				name  => $member->{name},
-				range => $range,
-				# Do we need neither $_->status nor $_->is_owner ??
+
+			push @rooms, {
+				name    => $room->{name}, 
+				url     => $room->{link}, 
+				ad      => $status->{advertising},
+				members => \@members,
 			};
+
 		}
 
-		push @rooms, {
-			name    => $room->{name}, 
-			url     => $room->{link}, 
-			ad      => $status->{advertising},
-			members => \@members,
+		# return "$page"
+		return {
+			url   => $url   ,
+			name  => $name  , # add page name destructively
+			rooms => \@rooms,
 		};
-
-	}
-
-	# return "$page"
-	return {
-		url   => $url   ,
-		name  => $name  , # add page name destructively
-		rooms => \@rooms,
-	};
+	});
 }
 
 
 sub crowl {
 	my $ref_urls = shift;
 
-	my @coros;
+	my @cvs;
 	my %pages;
 	for my $ref_url ( @$ref_urls ){
-		push @coros, Coro::async {
-			$pages{ $ref_url->[0] } = crowl_url $ref_url;
-		};
+		push @cvs, crowl_url($ref_url)->map(sub {
+			$pages{$ref_url->[0]} = $_[0];
+			return; # void
+		});
 	}
 
-	$_->join for @coros;
-
-	# return "$info"
-	return { pages => [ map { $pages{$_->[0]} } @$ref_urls ] };
+	AnyEvent::CondVar->sequence(@cvs)->map(sub {
+		{pages => [map { $pages{$_->[0]} } @$ref_urls]};
+	});
 }
 
 
@@ -224,19 +230,8 @@ sub output{
 }
 
 
-my $info;
-
-{
-	my $timeouted = Coro::Timer::timeout $timeout;
-
-	my $cur_coro = $Coro::current;
-	Coro::async {
-		$info = crowl \@urls;
-		$cur_coro->ready;
-	};
-	schedule;
-
-	die "timeouted\n" if $timeouted;
-}
-
-output $info;
+crowl(\@urls)->timeout($timeout)->map(sub {
+	my $info = shift or return AnyEvent::CondVar->fail("timeouted");
+	output $info;
+	return;  # void
+})->recv;
