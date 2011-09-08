@@ -96,7 +96,7 @@ sub crowl_url {
 	my ($url, $name) = @$ref_url;
 
 	return chaberi_lobby_page($url)->flat_map(sub {
-		my $lobby = shift or return AnyEvent::CondVar->unit();
+		my $lobby = shift or return cv_unit();
 		return _get_members(
 			$lobby->{host}, $lobby->{port}, 
 			[map { $_->{id} } @{$lobby->{rooms}}]
@@ -168,7 +168,7 @@ sub crowl {
 		});
 	}
 
-	AnyEvent::CondVar->sequence(@cvs)->map(sub {
+	cv_sequence(@cvs)->map(sub {
 		{pages => [map { $pages{$_->[0]} } @$ref_urls]};
 	});
 }
@@ -233,7 +233,7 @@ sub output{
 
 
 crowl(\@urls)->timeout($timeout)->map(sub {
-	my $info = shift or return AnyEvent::CondVar->fail("timeouted");
+	my $info = shift or return cv_fail("timeouted");
 	output $info;
 	return;  # void
 })->recv;

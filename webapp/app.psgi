@@ -71,20 +71,20 @@ sub get_connection($){
 
     my $do_rent = sub {
         $now_using{$host} = 1;
-        AnyEvent::CondVar->unit($connections{$host});
+        cv_unit($connections{$host});
     };
 
     if( $connections{$host} ){
         if( $now_using{$host} ){
             # TODO: wait for finishing to use
-            return AnyEvent::CondVar->fail( 'now using. sorry.' );
+            return cv_fail('now using. sorry.');
         }
         return $do_rent->();
     }
 
     # check the last failure to avoid sending request frequently.
     if (my $until = _wait_until $host) {
-        return AnyEvent::CondVar->fail(
+        return cv_fail(
             'Under cool-down until ' . (scalar localtime $until)
         );
     }
@@ -107,7 +107,7 @@ sub get_connection($){
         my $exception = shift;
 
         _record_failure $host if $exception =~ /can't\s*connect/i;
-        AnyEvent::CondVar->fail($exception);
+        cv_fail($exception);
     });
 }
 
@@ -140,13 +140,13 @@ my $app = sub {
                 $_[0];
             })->timeout(30)->flat_map(sub {
                 my $results = shift;
-                return AnyEvent::CondVar->unit($results) if $results;
+                return cv_unit($results) if $results;
 
                 # timeouted
                 close_connection $lobby;
                 $lobby->shutdown;
 
-                AnyEvent::CondVar->fail("timeout\n");
+                cv_fail("timeout\n");
             });
         })->map(sub {
             my $results = shift;
@@ -158,7 +158,7 @@ my $app = sub {
             $respond->( $res->finalize );
         })->catch(sub {
             $respond->([500, [], [@_]]);
-            AnyEvent::CondVar->unit(); # void
+            cv_unit(); # void
         });
     };
 };
