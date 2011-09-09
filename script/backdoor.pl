@@ -44,7 +44,10 @@ sub _get_members($$$){
 	                    ('port=' . $port), 
 	                    (map { 'room=' . $_ } @$ref_rooms);
 
-	as_cv { http_get $url, timeout => 30, $_[0] }->map(sub {;
+	my $guard = http_get $url, timeout => 30, (my $cv = AE::cv);
+	$cv->canceler(sub { undef $guard });
+
+	$cv->map(sub {
 		my ($data, $headers) = @_;
 		return undef unless ($headers->{Status} =~ /^2/);
 		return JSON->new->utf8(1)->decode($data);
