@@ -68,6 +68,11 @@
 </td>
 </tr>
 [% END %]
+[% IF page.rooms.size == 0 %]
+    <tr><td class="page-name" colspan="4">
+    <a href="[% page.url | html %]">[% page.name | html %]</a>の情報は読み込めませんでした。
+    </td></tr>
+[% END %]
 [% END %]
 </tbody>
 </table>
