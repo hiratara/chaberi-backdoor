@@ -236,7 +236,5 @@ sub output{
 }
 
 
-crowl(\@urls)->timeout($timeout)->map(sub {
-	my $info = shift or die "timeouted";
-	output $info;
-})->recv;
+my $info = crowl(\@urls)->timeout($timeout)->recv or die "timeouted";
+output $info;
