@@ -173,18 +173,8 @@ sub crowl_url {
 sub crowl {
 	my $ref_urls = shift;
 
-	my @cvs;
-	my %pages;
-	for my $ref_url ( @$ref_urls ){
-		push @cvs, crowl_url($ref_url)->map(sub {
-			$pages{$ref_url->[0]} = $_[0];
-			return; # void
-		});
-	}
-
-	cv_sequence(@cvs)->map(sub {
-		{pages => [map { $pages{$_->[0]} } @$ref_urls]};
-	});
+	AnyEvent::CondVar->all(map { crowl_url($_) } @$ref_urls)
+		->map(sub { {pages => [map { @$_ } @_]} });
 }
 
 
