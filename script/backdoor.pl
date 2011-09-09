@@ -143,21 +143,20 @@ sub crowl_url {
 	my ( $ref_url ) = @_;
 	my ($url, $name) = @$ref_url;
 
-	return chaberi_lobby_page($url)->flat_map(sub {
-		my $lobby = shift or return cv_unit();
-		return _get_members(
-			$lobby->{host}, $lobby->{port}, 
-			[map { $_->{id} } @{$lobby->{rooms}}]
-		)->map(sub {
-			my $room_data = shift or return;
-			return $lobby, $room_data;
-		});
-	})->flat_map(sub {
-		my ($lobby, $room_data) = @_;
-		$lobby && $room_data or return cv_unit;
+	call_cc {
+		my $cont = shift;
 
-		return _polish_room_info($lobby, $room_data);
-	})->map(sub {
+		chaberi_lobby_page($url)->flat_map(sub {
+			my $lobby = shift or return $cont->();
+			return _get_members(
+				$lobby->{host}, $lobby->{port},
+				[map { $_->{id} } @{$lobby->{rooms}}]
+			)->flat_map(sub {
+				my $room_data = shift or return $cont->();
+				cv_unit ($lobby, $room_data);
+			});
+		})->flat_map(\&_polish_room_info);
+	}->map(sub {
 		# return "$page"
 		return {
 			url   => $url   ,
