@@ -153,9 +153,9 @@ sub crowl_url {
 				[map { $_->{id} } @{$lobby->{rooms}}]
 			)->flat_map(sub {
 				my $room_data = shift or return $cont->();
-				cv_unit ($lobby, $room_data);
+				_polish_room_info($lobby, $room_data);
 			});
-		})->flat_map(\&_polish_room_info);
+		});
 	}->map(sub {
 		# return "$page"
 		return {
