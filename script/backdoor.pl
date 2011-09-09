@@ -156,7 +156,10 @@ sub crowl_url {
 				_polish_room_info($lobby, $room_data);
 			});
 		});
-	}->map(sub {
+	}->catch(sub {
+		warn @_;
+		cv_unit;
+	})->map(sub {
 		# return "$page"
 		return {
 			url   => $url   ,
