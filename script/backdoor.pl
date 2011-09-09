@@ -94,6 +94,51 @@ sub _calc_range{
 }
 
 
+sub _polish_room_info($$) {
+	my ($lobby, $room_data) = @_;
+
+	my %statuses = map { $_->{room_id} => $_->{room_status} } @$room_data;
+
+	my $schema = Chaberi::Backdoor::Schema->default_schema;
+	my @rooms;
+	for my $room ( @{$lobby->{rooms}} ){
+		my $status = $statuses{ $room->{id} };
+
+		my $obj_room = $schema->resultset('Room')->find({
+			unique_key => $room->{link},
+		});
+
+		my @members;
+		for my $member ( @{ $status->{members} } ) {
+			my $range;
+			if( $obj_room ){
+				my $obj_nick = $schema->resultset('Nick')->find_or_new(
+					name => $member->{name},
+				)->insert();
+
+			my $obj_range = _calc_range $obj_room, $obj_nick ;
+				$range = [$obj_range->epoch1, $obj_range->epoch2];
+			}
+			push @members, {
+				name  => $member->{name},
+				range => $range,
+				# Do we need neither $_->status nor $_->is_owner ??
+			};
+		}
+
+		push @rooms, {
+			name    => $room->{name},
+			url     => $room->{link},
+			ad      => $status->{advertising},
+			members => \@members,
+		};
+
+	}
+
+	cv_unit @rooms;
+}
+
+
 sub crowl_url {
 	my ( $ref_url ) = @_;
 	my ($url, $name) = @$ref_url;
@@ -107,53 +152,17 @@ sub crowl_url {
 			my $room_data = shift or return;
 			return $lobby, $room_data;
 		});
-	})->map(sub {
+	})->flat_map(sub {
 		my ($lobby, $room_data) = @_;
-		$lobby && $room_data or return;
+		$lobby && $room_data or return cv_unit;
 
-		my %statuses = map { $_->{room_id} => $_->{room_status} } @$room_data;
-
-		my $schema = Chaberi::Backdoor::Schema->default_schema;
-		my @rooms;
-		for my $room ( @{$lobby->{rooms}} ){
-			my $status = $statuses{ $room->{id} };
-
-			my $obj_room = $schema->resultset('Room')->find({
-				unique_key => $room->{link},
-			});
-
-			my @members;
-			for my $member ( @{ $status->{members} } ){
-				my $range;
-				if( $obj_room ){
-					my $obj_nick = $schema->resultset('Nick')->find_or_new(
-						name => $member->{name},
-					)->insert();
-
-					my $obj_range = _calc_range $obj_room, $obj_nick ;
-					$range = [$obj_range->epoch1, $obj_range->epoch2];
-				}
-				push @members, {
-					name  => $member->{name},
-					range => $range,
-					# Do we need neither $_->status nor $_->is_owner ??
-				};
-			}
-
-			push @rooms, {
-				name    => $room->{name}, 
-				url     => $room->{link}, 
-				ad      => $status->{advertising},
-				members => \@members,
-			};
-
-		}
-
+		return _polish_room_info($lobby, $room_data);
+	})->map(sub {
 		# return "$page"
 		return {
 			url   => $url   ,
 			name  => $name  , # add page name destructively
-			rooms => \@rooms,
+			rooms => [@_],
 		};
 	});
 }
