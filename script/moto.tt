@@ -23,11 +23,7 @@
     })();
   </script>
 </head>
-
 <body>
-<div style="width: 100%; float:left; margin: 0 -350px 0 0;">
-
-<div style="margin: 0 350px 0 0; padding: 0;">
 <h1><img src="./img/h1.png" alt="チャベリ 裏口２ α版"></h1>
 <ul>
 <li><a href="http://hiratara.dyndns.org/chaberi/">チャベリ 裏口</a>を高速化したものです(処理時間参照)。予告なく削除することがあるのでご注意を。</li>
@@ -39,43 +35,6 @@
 <li class="search_menu"><input name="match" type="checkbox" value=".room-name">部屋名</li>
 <li><input id="search" name="search" type="text" value=""><input id="search-button" type="button" value="絞込"><img id="wait-anime" alt="GIF-アニメーション" src="img/wait.gif" style="display: none;"></li>
 </ul>
-</div>
-
-</div>
-
-<div style="float:right; width:350px;">
-<script src="http://widgets.twimg.com/j/2/widget.js"></script>
-<script>
-new TWTR.Widget({
-  version: 2,
-  type: 'profile',
-  rpp: 4,
-  interval: 30000,
-  width: 350,
-  height: 100,
-  theme: {
-    shell: {
-      background: '#CCFFFF',
-      color: '#000000'
-    },
-    tweets: {
-      background: '#ffffff',
-      color: '#000000',
-      links: '#2c72eb'
-    }
-  },
-  features: {
-    scrollbar: true,
-    loop: false,
-    live: true,
-    behavior: 'all'
-  }
-}).render().setUser('hiratara').start();
-</script>
-</div>
-
-<div style="clear: both;"></div>
-
 <table class="display-table" summary="チャベリをまとめた表です。右から一列目がメンバー、二列目がテーマ名、三列目がルーム名、四列目がそのチャットが属すパーク名です。">
 <thead>
 <tr>
