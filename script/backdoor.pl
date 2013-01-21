@@ -31,6 +31,11 @@ my @urls = (
 	['http://ch3.chaberi.com/3', 'グリーン/3'],
 	['http://ch3.chaberi.com/4', 'グリーン/4'],
 	['http://ch3.chaberi.com/5', 'グリーン/5'],
+	['http://ch0.chaberi.com/' , 'ベータ版/トップ'],
+	['http://ch0.chaberi.com/2', 'ベータ版/2'],
+	['http://ch0.chaberi.com/3', 'ベータ版/3'],
+	['http://ch0.chaberi.com/4', 'ベータ版/4'],
+	['http://ch0.chaberi.com/5', 'ベータ版/5'],
 );
 
 my $timeout = 60 * 3;
