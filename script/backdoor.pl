@@ -9,7 +9,7 @@ use AnyEvent::HTTP;
 use Chaberi::AnyEvent::LobbyPage qw/chaberi_lobby_page/;
 use Chaberi::Backdoor::Schema;
 use Data::Monad::CondVar;
-use Template;
+use Text::Xslate;
 use Encode;
 use JSON;
 
@@ -218,12 +218,12 @@ sub output{
 		exec_time => time - $start_epoch,
 	};
 
-	my $tt = Template->new(
-		ENCODING => 'utf8', 
+	my $tx = Text::Xslate->new(
+		function => {level => \&_level}
 	);
-	$tt->process(
-		dirname(__FILE__) . '/moto.tt', {FUNC_LV => \&_level, %$data}, \my $out
-	) or die $tt->error;
+	my $out = $tx->render(
+		dirname(__FILE__) . '/moto.tt', $data
+	);
 
 	{
 		open my $fh, '>:utf8', config->{output_dir} . '/out.html' or die;

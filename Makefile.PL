@@ -3,7 +3,7 @@ name 'Chaberi-Backdoor';
 all_from 'lib/Chaberi/Backdoor.pm';
 
 requires 'DBIx::Class';
-requires 'Template';
+requires 'Text::Xslate';
 requires 'Plack';
 requires 'Twiggy';
 requires 'JSON';

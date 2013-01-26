@@ -50,40 +50,39 @@
 </tr>
 </thead>
 <tbody>
-[% FOR page = info.pages %]
-[% FOR room = page.rooms %]
+: for $info.pages -> $page { 
+:     for $page.rooms -> $room {
 <tr>
 <td class="page-name">
-<a href="[% page.url | html %]">[% page.name | html %]</a>
+<a href="<: $page.url :>"><: $page.name :></a>
 </td>
 <td class="room-name">
-[%~ IF room.url ~%]
-  <a href="[% room.url | html %]">[% room.name | html %]</a>
-[%~ ELSE ~%]
-  [% room.name | html %]
-[%~ END ~%]
+:         if $room.url {
+  <a href="<: $room.url :>"><: $room.name :></a>
+:         } else {
+  <: $room.name :>
+:         }
 </td>
 <td class="room-ad">
-[% room.ad | html %]
+<: $room.ad :>
 </td>
 <td class="member-names">
-[%~ FOR member = room.members ~%]
-<span class="member-name-lv[% FUNC_LV(member) %]">[%~ member.name | html %]</span>[% IF ! loop.last %]　[% END ~%]
-[%~ END ~%]
+:         for $room.members -> $member {
+<span class="member-name-lv<: level($member) :>"><: $member.name :></span><: if ! $~member.is_last { '　' } :>
+:         }
 </td>
 </tr>
-[% END %]
-[% IF page.rooms.size == 0 %]
+:    } else {
     <tr><td class="page-name" colspan="4">
-    <a href="[% page.url | html %]">[% page.name | html %]</a>の情報は読み込めませんでした。
+    <a href="<: $page.url :>"><: $page.name :></a>の情報は読み込めませんでした。
     </td></tr>
-[% END %]
-[% END %]
+:    }
+: }
 </tbody>
 </table>
 <ul>
-<li>完了時刻: [% finished %]</li>
-<li>処理時間: [% exec_time %]秒</li>
+<li>完了時刻: <: $finished :></li>
+<li>処理時間: <: $exec_time :>秒</li>
 </ul>
 <div><iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fhiratara.dyndns.org%2Fchaberi%2F&amp;send=false&amp;layout=standard&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font=arial&amp;height=80&amp;appId=100848266724416" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:80px;" allowTransparency="true"></iframe></div>
 <p class="copyright">&copy; 2009- hiratara</p>
