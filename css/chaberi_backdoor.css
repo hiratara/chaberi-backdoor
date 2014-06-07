@@ -26,8 +26,18 @@ margin:30px auto 10px;
 border-collapse:collapse;
 }
 .copyright{
-  text-align:right;
-  color: #999;
+text-align:right;
+color:#999;
+}
+.header {
+overflow:hidden;
+}
+.header h1{
+float:left;
+}
+.developer-link{
+float:right;
+font-size:medium;
 }
 /* ブロックレベル要素 END */
 
@@ -80,5 +90,8 @@ color:#F60;
 }
 .display-table td{
 border:1px #1C79C6 solid;
+}
+#wait-anime{
+display:none;
 }
 /* インライン要素 END */
