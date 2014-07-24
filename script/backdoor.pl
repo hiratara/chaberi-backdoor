@@ -98,6 +98,14 @@ sub _calc_range{
 	}
 }
 
+sub _convert_link ($) {
+    my $orig_url = shift;
+    if ($orig_url =~ m{^http://ch(\d).chaberi.com/chat/([^/]+)/(\d+)$}) {
+        "./$1/$2/$3";
+    } else {
+	$orig_url;
+    }
+}
 
 sub _polish_room_info($$) {
 	my ($lobby, $room_data) = @_;
@@ -133,7 +141,7 @@ sub _polish_room_info($$) {
 
 		push @rooms, {
 			name    => $room->{name},
-			url     => $room->{link},
+			url     => _convert_link $room->{link},
 			ad      => $status->{advertising},
 			members => \@members,
 		};
