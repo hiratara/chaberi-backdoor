@@ -41,6 +41,14 @@ my @urls = (
 my $timeout = 60 * 3;
 my $margine = 20 * 60;  # 範囲が連続していると見なす幅
 
+my $config;
+sub config() {
+	unless ($config) {
+		my $file = dirname(__FILE__) . '/config.pl';
+		-f $file and $config = do $file;
+	}
+	return $config;
+}
 
 sub _get_members($$$){
 	my ( $address, $port, $ref_rooms) = @_;
@@ -101,7 +109,7 @@ sub _calc_range{
 sub _convert_link ($) {
     my $orig_url = shift;
     if ($orig_url =~ m{^http://ch(\d).chaberi.com/chat/([^/]+)/(\d+)$}) {
-        "./$1/$2/$3";
+        config->{url_base} . "$1/$2/$3";
     } else {
 	$orig_url;
     }
@@ -206,15 +214,6 @@ sub _level {
 	} else {
 		return 5;
 	}
-}
-
-my $config;
-sub config() {
-	unless ($config) {
-		my $file = dirname(__FILE__) . '/config.pl';
-		-f $file and $config = do $file;
-	}
-	return $config;
 }
 
 sub output{

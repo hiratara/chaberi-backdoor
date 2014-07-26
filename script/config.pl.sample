@@ -1,0 +1,7 @@
+use strict;
+use warnings;
+
+my $config = {
+    output_dir => '/path/to/output/dir',
+    url_base => 'http://your.chaberi.backdoor.jp/',
+};
