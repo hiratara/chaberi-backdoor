@@ -98,6 +98,17 @@
 : }
 </tbody>
 </table>
+
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- chaberi backdoor footer -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:728px;height:90px"
+     data-ad-client="ca-pub-3633073448695783"
+     data-ad-slot="4568709754"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
 <ul>
 <li>完了時刻: <: $finished :></li>
 <li>処理時間: <: $exec_time :>秒</li>
