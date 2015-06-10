@@ -52,7 +52,7 @@ sub config() {
 
 sub _get_members($$$){
 	my ( $address, $port, $ref_rooms) = @_;
-	my $url = 'http://localhost:10081?' . 
+	my $url = 'http://localhost:10082?' .
 	          join '&', ('address=' . $address), 
 	                    ('port=' . $port), 
 	                    (map { 'room=' . $_ } @$ref_rooms);
