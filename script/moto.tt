@@ -41,11 +41,18 @@
 </div>
 
 <ul>
+<li>2017.04.03 <a href="http://www.commutia.co.jp/blog/2017/02/09/">チャベリから削除された部屋</a>を裏口からも削除</li>
+<li>2016.01.22 部屋へのリンクが壊れているのを修正</li>
+<li>不具合を見つけた方、<a href="http://twitter.com/hiratara">twitter</a>か hira.tara+chaberi @ gmail.com まで連絡下さい</li>
+</ul>
+
+<ul>
 <li><a href="http://www.chaberi.com/">チャベリ</a>の非公式入り口です。<a href="http://www.chaberi.com/">チャベリ</a>を元に勝手に生成しています。</li>
 <li>ソースの一部は<a href="http://github.com/hiratara/chaberi-backdoor/tree/master">github</a>で公開してます。</li>
 <li>※ このページは、<a href="http://www.chaberi.com/">チャベリ</a>とはなんの関係もありません。</li>
 <li>※ あわせて読みたい → <a href="http://chaberi.namusyaka.info/">チャベリ勝手口</a>
 </ul>
+
 <ul>
 <li class="search_menu"><input name="match" type="checkbox" value=".member-names" checked="checked">人名</li>
 <li class="search_menu"><input name="match" type="checkbox" value=".room-ad">呼込</li>

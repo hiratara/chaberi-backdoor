@@ -19,23 +19,6 @@ my @urls = (
 	['http://ch1.chaberi.com/' , 'ブルー/トップ'],
 	['http://ch1.chaberi.com/2', 'ブルー/2'],
 	['http://ch1.chaberi.com/3', 'ブルー/3'],
-	['http://ch1.chaberi.com/4', 'ブルー/4'],
-	['http://ch1.chaberi.com/5', 'ブルー/5'],
-	['http://ch2.chaberi.com/' , 'オレンジ/トップ'],
-	['http://ch2.chaberi.com/2', 'オレンジ/2'],
-	['http://ch2.chaberi.com/3', 'オレンジ/3'],
-	['http://ch2.chaberi.com/4', 'オレンジ/4'],
-	['http://ch2.chaberi.com/5', 'オレンジ/5'],
-	['http://ch3.chaberi.com/' , 'グリーン/トップ'],
-	['http://ch3.chaberi.com/2', 'グリーン/2'],
-	['http://ch3.chaberi.com/3', 'グリーン/3'],
-	['http://ch3.chaberi.com/4', 'グリーン/4'],
-	['http://ch3.chaberi.com/5', 'グリーン/5'],
-	['http://ch0.chaberi.com/' , 'ベータ版/トップ'],
-	['http://ch0.chaberi.com/2', 'ベータ版/2'],
-	['http://ch0.chaberi.com/3', 'ベータ版/3'],
-	['http://ch0.chaberi.com/4', 'ベータ版/4'],
-	['http://ch0.chaberi.com/5', 'ベータ版/5'],
 );
 
 my $timeout = 60 * 3;
